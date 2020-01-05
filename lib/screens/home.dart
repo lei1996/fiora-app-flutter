@@ -51,10 +51,10 @@ class HomePage extends StatelessWidget {
                   // 需要根据消息时间 sort， 需要将
                   itemBuilder: (ctx, i) => Linkman(
                     id: (authData.friends[i] as FriendItem).sId,
-                    avatar: (authData.friends[i] as FriendItem).to.avatar,
-                    name: (authData.friends[i] as FriendItem).to.username,
-                    massage: (authData.friends[i] as FriendItem).to.username,
-                    time: (authData.friends[i] as FriendItem).to.username,
+                    avatar: (authData.friends[i] as FriendItem).avatar,
+                    name: (authData.friends[i] as FriendItem).name,
+                    massage: (authData.friends[i] as FriendItem).name,
+                    time: (authData.friends[i] as FriendItem).createTime,
                   ),
                 ),
               ),

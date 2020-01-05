@@ -12,4 +12,5 @@ class GroupItem {
     @required this.avatar,
     @required this.creator,
   });
+  
 }

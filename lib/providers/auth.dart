@@ -3,8 +3,11 @@ import 'dart:async';
 
 import 'package:fiora_app_flutter/models/groups.dart';
 import 'package:fiora_app_flutter/models/friends.dart';
+import 'package:fiora_app_flutter/models/linkman.dart';
 import 'package:fiora_app_flutter/models/message.dart';
-import 'package:flutter/material.dart';
+import 'package:fiora_app_flutter/services/index.dart';
+import 'package:fiora_app_flutter/utils/util.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/fetch.dart' as Fetch;
@@ -22,7 +25,9 @@ class Auth with ChangeNotifier {
 
   Map<String, List<Message>> _message = {};
 
-  final List<FriendItem> _friends = [];
+  final List<Linkman> _linkmans = [];
+
+  List<FriendItem> _friends = [];
   final List<GroupItem> _groups = [];
 
   bool get isAuth {
@@ -88,7 +93,7 @@ class Auth with ChangeNotifier {
       final linkmanIds = [
         ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
         ...(resData['friends'] as List<dynamic>)
-            .map((friend) => getFriendId(friend['from'], friend['to']['_id'])),
+            .map((friend) => Util.getFriendId(friend['from'], friend['to']['_id'])),
       ];
       getLinkmansLastMessages(linkmanIds);
       notifyListeners();
@@ -103,18 +108,12 @@ class Auth with ChangeNotifier {
         'expiryDate': _expiryDate.toIso8601String(),
       });
       perfs.setString('userData', userData);
-      setFriends(resData);
-      setGroups(resData);
+      // _friends = await setFriends(resData['friends']);
+      print(_friends);
+      // setGroups(resData);
     } catch (e) {
       throw e;
     }
-  }
-
-  String getFriendId(String userId1, String userId2) {
-    if (userId1.compareTo(userId2) == -1) {
-      return userId1 + userId2;
-    }
-    return userId2 + userId1;
   }
 
   // 注册
@@ -148,11 +147,12 @@ class Auth with ChangeNotifier {
     if (res[0] != null) {
       throw SocketException(res[0]);
     }
+    // logout();
     final resData = res[1];
     final linkmanIds = [
       ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
-      ...(resData['friends'] as List<dynamic>)
-          .map((friend) => getFriendId(friend['from'], friend['to']['_id'])),
+      ...(resData['friends'] as List<dynamic>).map(
+          (friend) => Util.getFriendId(friend['from'], friend['to']['_id'])),
     ];
     getLinkmansLastMessages(linkmanIds);
     setValue(
@@ -164,8 +164,9 @@ class Auth with ChangeNotifier {
       avatar: extractedUserData['avatar'],
       expiryDate: expiryDate,
     );
-    setFriends(resData);
-    setGroups(resData);
+    setFriends(resData['friends']);
+    // print(_friends);
+    // setGroups(resData);
     notifyListeners();
     _autoLogout();
     return true;
@@ -186,7 +187,6 @@ class Auth with ChangeNotifier {
         throw SocketException(res[0]);
       }
       final resData = res[1];
-      // print(resData);
       // 消息 要使用Map<String, List<Message>> 的数据结构
       (resData as Map<String, dynamic>).forEach((linkmanId, massageData) {
         List<Message> messageItem = [];
@@ -209,12 +209,30 @@ class Auth with ChangeNotifier {
           });
           return messageItem;
         });
+        // friendTmp = _friends.firstWhere((friend) => friend.sId == linkmanId);
+        // print(friendTmp);
+        // groupTmp = _groups.firstWhere((group) => group.sId == linkmanId);
+        // print(groupTmp);
+        // _linkmans.add(
+        //   Linkman(
+        //     sId: friend.sId,
+        //     name: friend.to.username,
+
+        //   )
+        // )
       });
-      print(_message);
+      // print(_message);
     } catch (e) {
       throw e;
     }
   }
+
+  Future<List<FriendItem>> setFriends(resData) async {
+    return compute(parseFriends, resData);
+  }
+
+  List<FriendItem> parseFriends(dynamic responseBody) =>
+    responseBody.map<FriendItem>((json) => FriendItem.fromJson(json)).toList();
 
   List<Message> getMessageItem(String sId) {
     return _message.containsKey(sId) ? _message[sId] : [];
@@ -241,24 +259,6 @@ class Auth with ChangeNotifier {
     _username = username;
     _avatar = avatar;
     _expiryDate = expiryDate;
-  }
-
-  // 组装好友
-  Future<void> setFriends(resData) async {
-    (resData['friends'] as List<dynamic>).forEach((friend) {
-      _friends.add(
-        FriendItem(
-          sId: friend['_id'],
-          from: friend['from'],
-          to: To(
-            sId: friend['to']['_id'],
-            username: friend['to']['username'],
-            avatar: friend['to']['avatar'],
-          ),
-        ),
-      );
-    });
-    // print(resData['friends']);
   }
 
   // 组装群组
