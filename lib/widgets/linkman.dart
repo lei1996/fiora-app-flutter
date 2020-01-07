@@ -1,9 +1,10 @@
-import 'package:fiora_app_flutter/screens/user.dart';
-import 'package:fiora_app_flutter/utils/time.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../utils/time.dart';
+import '../screens/chat.dart';
 import 'avatar.dart';
+
 
 class Linkman extends StatelessWidget {
   final String id;
@@ -24,7 +25,7 @@ class Linkman extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(id);
+    // print(id);
     return Dismissible(
       key: ValueKey(id),
       background: Container(
@@ -71,8 +72,8 @@ class Linkman extends StatelessWidget {
       child: GestureDetector(
         onTap: () {
           Navigator.of(context).pushNamed(
-            User.routeName,
-            arguments: id,
+            ChatPage.routeName,
+            arguments: {'id': id, 'name': name},
           );
         },
         child: Hero(
@@ -95,7 +96,7 @@ class Linkman extends StatelessWidget {
                 ),
                 title: Text(name),
                 subtitle: Text(
-                  id.length < 35 ? '$lastName: $message':  message,
+                  id.length < 35 ? '$lastName: $message' : message,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),

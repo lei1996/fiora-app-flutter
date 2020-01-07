@@ -1,13 +1,12 @@
-import 'package:fiora_app_flutter/screens/user.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
 import './helpers/custom_route.dart';
 import './providers/auth.dart';
-import './screens/splash_screen.dart';
 import './screens/home.dart';
-// import './fetch.dart' as Fetch;
+import './screens/chat.dart';
+import './screens/splash_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -55,7 +54,7 @@ class MyApp extends StatelessWidget {
           // initialRoute: '/',
           routes: {
             HomePage.routeName: (ctx) => HomePage(),
-            User.routeName: (ctx) => User(),
+            ChatPage.routeName: (ctx) => ChatPage(),
           },
         ),
       ),

@@ -39,7 +39,6 @@ class Auth with ChangeNotifier {
 
   List<LinkmanItem> get linkmans => [..._linkmans];
 
-
   String get token {
     if (_expiryDate != null &&
         _expiryDate.isAfter(DateTime.now()) &&
@@ -82,8 +81,8 @@ class Auth with ChangeNotifier {
       _autoLogout();
       final linkmanIds = [
         ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
-        ...(resData['friends'] as List<dynamic>).map(
-            (friend) => getFriendId(friend['from'], friend['to']['_id'])),
+        ...(resData['friends'] as List<dynamic>)
+            .map((friend) => getFriendId(friend['from'], friend['to']['_id'])),
       ];
       await getLinkmansLastMessages(linkmanIds);
       notifyListeners();
@@ -147,8 +146,8 @@ class Auth with ChangeNotifier {
     final resData = res[1];
     final linkmanIds = [
       ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
-      ...(resData['friends'] as List<dynamic>).map(
-          (friend) => getFriendId(friend['from'], friend['to']['_id'])),
+      ...(resData['friends'] as List<dynamic>)
+          .map((friend) => getFriendId(friend['from'], friend['to']['_id'])),
     ];
     await getLinkmansLastMessages(linkmanIds);
     setFriends(resData);
@@ -195,7 +194,7 @@ class Auth with ChangeNotifier {
                 sId: message['sId'],
                 from: FromUser(
                   tag: message['from']['tag'],
-                  sId: message['from']['sId'],
+                  sId: message['from']['_id'],
                   username: message['from']['username'],
                   avatar: message['from']['avatar'],
                 ),
@@ -212,7 +211,54 @@ class Auth with ChangeNotifier {
     }
   }
 
-  List<Message> getMessageItem(String sId) => _message.containsKey(sId) ? _message[sId] : [];
+  // 获取联系人历史消息
+  Future<void> getLinkmanHistoryMessages(
+      {String linkmanId, int existCount}) async {
+    // print(linkmanIds);
+    try {
+      final res = await Fetch.fetch(
+        'getLinkmanHistoryMessages',
+        {
+          'linkmanId': linkmanId,
+          'existCount': existCount,
+        },
+      );
+      // print(res);
+      if (res[0] != null) {
+        throw SocketException(res[0]);
+      }
+      final resData = res[1];
+      // print(resData);
+      // 消息 要使用Map<String, List<Message>> 的数据结构
+      List<Message> messageItem = [];
+      (resData as List<dynamic>).forEach((message) {
+        messageItem.add(
+          Message(
+            type: message['type'],
+            content: message['content'],
+            sId: message['sId'],
+            from: FromUser(
+              tag: message['from']['tag'],
+              sId: message['from']['_id'],
+              username: message['from']['username'],
+              avatar: message['from']['avatar'],
+            ),
+            createTime: message['createTime'],
+          ),
+        );
+      });
+      _message.update(linkmanId, (messages) {
+        return [...messageItem, ...messages];
+      });
+      notifyListeners();
+      // print(_message);
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  List<Message> getMessageItem(String sId) =>
+      _message.containsKey(sId) ? _message[sId] : [];
 
   void setValue({
     token,

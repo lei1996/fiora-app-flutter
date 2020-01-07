@@ -1,20 +1,16 @@
-import 'package:fiora_app_flutter/widgets/avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth.dart';
-import '../utils/profileClipper.dart';
 import './user_widget.dart';
 import './auth_widget.dart';
+import './avatar.dart';
 
 class AvatarWidget extends StatelessWidget {
   void _showModal(BuildContext ctx) {
     showModalBottomSheet(
       context: ctx,
-      // shape: RoundedRectangleBorder(
-      //   borderRadius: BorderRadius.circular(30.0),
-      // ),
       backgroundColor: Colors.white,
       builder: (_) {
         return Container(

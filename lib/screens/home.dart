@@ -1,11 +1,9 @@
-import 'package:fiora_app_flutter/widgets/linkman.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/avatar_widget.dart';
-import '../models/friends.dart';
-import '../models/linkman.dart';
+import '../widgets/linkman.dart';
 import '../providers/auth.dart';
 
 class HomePage extends StatelessWidget {
@@ -21,8 +19,6 @@ class HomePage extends StatelessWidget {
       allowFontScaling: true,
     )..init(context);
     return Scaffold(
-      // drawer: ,
-      // backgroundColor: Color.fromRGBO(5, 159, 149, 0.8),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,35 +47,15 @@ class HomePage extends StatelessWidget {
                   itemCount: authData.linkmans.length,
                   // 需要根据消息时间 sort， 需要将
                   itemBuilder: (ctx, i) => Linkman(
-                    id: (authData.linkmans[i] as LinkmanItem).sId,
-                    avatar: (authData.linkmans[i] as LinkmanItem).avatar,
-                    name: (authData.linkmans[i] as LinkmanItem).name,
-                    message: (authData.linkmans[i] as LinkmanItem).message.content,
-                    lastName: (authData.linkmans[i] as LinkmanItem).message.from.username,
-                    time: DateTime.parse((authData.linkmans[i] as LinkmanItem).message.createTime),
+                    id: authData.linkmans[i].sId,
+                    avatar: authData.linkmans[i].avatar,
+                    name: authData.linkmans[i].name,
+                    message: authData.linkmans[i].message.content,
+                    lastName: authData.linkmans[i].message.from.username,
+                    time: DateTime.parse(authData.linkmans[i].message.createTime),
                   ),
                 ),
               ),
-              // Container(
-              //   child: ListView.builder(
-              //     // scrollDirection: Axis.horizontal,
-              //     // physics: BouncingScrollPhysics(),
-              //     itemCount: [1, 2, 3].length,
-              //     itemBuilder: (context, index) {
-              //       return Container(
-              //         width: double.infinity,
-              //         color: Color.fromRGBO(5, 5, 5, 1),
-              //         padding: EdgeInsets.only(
-              //           left: ScreenUtil().setWidth(30),
-              //         ),
-              //         child: Text(
-              //           [1, 2, 3][index].toString(),
-              //           style: TextStyle(backgroundColor: Colors.red),
-              //         ),
-              //       );
-              //     },
-              //   ),
-              // ),
             ),
           ],
         ),
