@@ -12,6 +12,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/fetch.dart' as Fetch;
 import '../models/socket_exception.dart';
 
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
+final url = ['http://127.0.0.1:9200', 'https://fiora.suisuijiang.com'];
+
+IO.Socket socket = IO.io(url[1], <String, dynamic>{
+  'transports': ['websocket'],
+});
+
 class Auth with ChangeNotifier {
   String _userId; // 用户ID
   DateTime _expiryDate; // 过期时间
@@ -99,6 +107,7 @@ class Auth with ChangeNotifier {
       perfs.setString('userData', userData);
       setFriends(resData);
       setGroups(resData);
+      _linkmansSort();
     } catch (e) {
       throw e;
     }
@@ -142,7 +151,7 @@ class Auth with ChangeNotifier {
     if (res[0] != null) {
       throw SocketException(res[0]);
     }
-    // logout();
+    _listMessage();
     final resData = res[1];
     final linkmanIds = [
       ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
@@ -152,6 +161,7 @@ class Auth with ChangeNotifier {
     await getLinkmansLastMessages(linkmanIds);
     setFriends(resData);
     setGroups(resData);
+    _linkmansSort();
     setValue(
       token: extractedUserData['token'],
       userId: extractedUserData['userId'],
@@ -164,6 +174,38 @@ class Auth with ChangeNotifier {
     notifyListeners();
     _autoLogout();
     return true;
+  }
+
+  Future<void> _listMessage() async {
+    socket.on('message', (dynamic message) {
+      // print(message['from']['_id']);
+      print(message);
+      // print(_userId);
+      var isMe = message['from']['_id'] == _userId;
+      if (isMe && message['from']['tag'] != _tag) {
+        _tag = message['from']['tag'];
+        notifyListeners();
+      }
+      print(_linkmans[1].sId);
+      var index = _linkmans
+          .indexWhere((linkman) => linkman.sId.startsWith(message['to']));
+      // Message lastMessage = _message[usId][_message[usId].length - 1];
+      // _linkmans[index] = LinkmanItem(
+        // sId: usId,
+        // type: '',
+        // unread: 0,
+        // name: friend['to']['username'],
+        // avatar: friend['to']['avatar'],
+        // creator: '',
+        // createTime: DateTime.parse(friend['createTime']),
+        // message: lastMessage,
+      // );
+      print(index);
+    });
+  }
+
+  Future<void> _disconnect() async {
+    socket.on('_disconnect', (_) => print("_disconnect"));
   }
 
   // 获取联系人最后消息
@@ -318,6 +360,11 @@ class Auth with ChangeNotifier {
     });
   }
 
+  Future<void> _linkmansSort() async {
+    _linkmans.sort(
+        (LinkmanItem a, LinkmanItem b) => b.createTime.compareTo(a.createTime));
+  }
+
   // 登出
   Future<void> logout() async {
     _token = null;
@@ -331,6 +378,7 @@ class Auth with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     prefs.remove('userData');
+    _disconnect();
     // prefs.clear();
   }
 

@@ -47,19 +47,24 @@ class MessageWidget extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(6),
-                    color: Color.fromRGBO(22, 44, 23, 0.6),
+                    color: Color.fromRGBO(80, 85, 90, 1),
                   ),
                   child: Text(
                     content,
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
             ),
           )
         : Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: ScreenUtil().setWidth(22),
-              vertical: ScreenUtil().setHeight(22),
+            padding: EdgeInsets.only(
+              top: ScreenUtil().setHeight(22),
+              bottom: ScreenUtil().setHeight(5),
+              left: ScreenUtil().setWidth(22),
+              right: ScreenUtil().setWidth(22),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,10 +93,13 @@ class MessageWidget extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(6),
-                          color: Color.fromRGBO(22, 44, 23, 0.6),
+                          color: Color.fromRGBO(80, 85, 90, 1),
                         ),
                         child: Text(
                           content,
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
