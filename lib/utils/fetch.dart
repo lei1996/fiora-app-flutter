@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import './socket.dart' as Socket;
+import '../providers/auth.dart' as Socket;
 
 /// 请求 socket.io 接口
 /// 
