@@ -19,6 +19,8 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   ScrollController _scrollController;
+  final _messageController = TextEditingController();
+  final _messageFocusNode = FocusNode();
   // double _prevOffset;
 
   @override
@@ -32,6 +34,15 @@ class _ChatPageState extends State<ChatPage> {
       // _prevOffset = _scrollController.position.maxScrollExtent;
     });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is removed from the
+    // widget tree.
+    _messageController.dispose();
+    _messageFocusNode.dispose();
+    super.dispose();
   }
 
   // _scrollListener() {
@@ -56,6 +67,24 @@ class _ChatPageState extends State<ChatPage> {
   //   }
   // }
 
+  // 发送消息
+  Future<void> _sendMessage({
+    String to,
+    String type,
+    String content,
+  }) async {
+    await Provider.of<Auth>(context, listen: false)
+        .sendMessage(to: to, type: type, content: content);
+    Timer(
+        Duration(milliseconds: 300),
+        () => _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeIn,
+            ));
+  }
+
+  // 加载历史消息
   Future<void> _loadingMessages({
     BuildContext context,
     String id,
@@ -72,7 +101,7 @@ class _ChatPageState extends State<ChatPage> {
     // _prevOffset = _scrollController.position.maxScrollExtent;
   }
 
-  Widget _buildMessageComposer() {
+  Widget _buildMessageComposer(String id) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18.0),
@@ -94,7 +123,19 @@ class _ChatPageState extends State<ChatPage> {
                 horizontal: ScreenUtil().setWidth(50.0),
               ),
               child: TextField(
+                controller: _messageController,
                 textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) {
+                  if (_messageController.text.isEmpty) return;
+                  _sendMessage(
+                    to: id,
+                    type: 'text',
+                    content: _messageController.text,
+                  );
+                  _messageController.text = '';
+                },
+                focusNode: _messageFocusNode,
                 // collapsed 去除input 下面的线
                 decoration: InputDecoration.collapsed(
                   hintText: '代码写完了吗?',
@@ -103,12 +144,19 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           IconButton(
-            // attach_file
-            icon: Icon(CustomIcon.attach),
-            iconSize: ScreenUtil().setWidth(90.0),
-            color: Theme.of(context).accentColor,
-            onPressed: () {},
-          ),
+              // attach_file
+              icon: Icon(CustomIcon.send),
+              iconSize: ScreenUtil().setWidth(90.0),
+              color: Theme.of(context).accentColor,
+              onPressed: () {
+                if (_messageController.text.isEmpty) return;
+                _sendMessage(
+                  to: id,
+                  type: 'text',
+                  content: _messageController.text,
+                );
+                _messageController.text = '';
+              }),
         ],
       ),
     );
@@ -166,7 +214,7 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
             ),
-            _buildMessageComposer(),
+            _buildMessageComposer(params['id']),
           ],
         ),
       ),

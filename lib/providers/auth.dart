@@ -89,8 +89,8 @@ class Auth with ChangeNotifier {
       _autoLogout();
       final linkmanIds = [
         ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
-        ...(resData['friends'] as List<dynamic>)
-            .map((friend) => getFriendId(friend['from'], friend['to']['_id'])),
+        ...(resData['friends'] as List<dynamic>).map(
+            (friend) => Util.getFriendId(friend['from'], friend['to']['_id'])),
       ];
       await getLinkmansLastMessages(linkmanIds);
       notifyListeners();
@@ -113,12 +113,12 @@ class Auth with ChangeNotifier {
     }
   }
 
-  String getFriendId(String userId1, String userId2) {
-    if (userId1.compareTo(userId2) == -1) {
-      return userId1 + userId2;
-    }
-    return userId2 + userId1;
-  }
+  // String getFriendId(String userId1, String userId2) {
+  //   if (userId1.compareTo(userId2) == -1) {
+  //     return userId1 + userId2;
+  //   }
+  //   return userId2 + userId1;
+  // }
 
   // 注册
   Future<void> signup(String userName, String password) async {
@@ -151,12 +151,12 @@ class Auth with ChangeNotifier {
     if (res[0] != null) {
       throw SocketException(res[0]);
     }
-    _listMessage();
+    _listenMessage();
     final resData = res[1];
     final linkmanIds = [
       ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
-      ...(resData['friends'] as List<dynamic>)
-          .map((friend) => getFriendId(friend['from'], friend['to']['_id'])),
+      ...(resData['friends'] as List<dynamic>).map(
+          (friend) => Util.getFriendId(friend['from'], friend['to']['_id'])),
     ];
     await getLinkmansLastMessages(linkmanIds);
     setFriends(resData);
@@ -176,31 +176,73 @@ class Auth with ChangeNotifier {
     return true;
   }
 
-  Future<void> _listMessage() async {
+  Future<void> _listenMessage() async {
     socket.on('message', (dynamic message) {
-      // print(message['from']['_id']);
       print(message);
-      // print(_userId);
       var isMe = message['from']['_id'] == _userId;
       if (isMe && message['from']['tag'] != _tag) {
         _tag = message['from']['tag'];
         notifyListeners();
       }
-      print(_linkmans[1].sId);
       var index = _linkmans
           .indexWhere((linkman) => linkman.sId.startsWith(message['to']));
-      // Message lastMessage = _message[usId][_message[usId].length - 1];
-      // _linkmans[index] = LinkmanItem(
-        // sId: usId,
-        // type: '',
-        // unread: 0,
-        // name: friend['to']['username'],
-        // avatar: friend['to']['avatar'],
-        // creator: '',
-        // createTime: DateTime.parse(friend['createTime']),
-        // message: lastMessage,
-      // );
-      print(index);
+      if (index >= 0) {
+        // 这里查找Map 里面有没有具体的key
+        String sId;
+        if (_message.containsKey(message['to'])) {
+          sId = message['to'];
+          _message.update(
+              sId,
+              (messages) => [
+                    ...messages,
+                    Message(
+                      type: message['type'],
+                      content: message['content'],
+                      sId: message['_id'],
+                      from: FromUser(
+                        tag: message['from']['tag'],
+                        sId: message['from']['_id'],
+                        username: message['from']['username'],
+                        avatar: message['from']['avatar'],
+                      ),
+                      createTime: message['createTime'],
+                    ),
+                  ]);
+        } else {
+          sId = Util.getFriendId(_userId, message['from']['_id']);
+          _message.update(
+              sId,
+              (messages) => [
+                    ...messages,
+                    Message(
+                      type: message['type'],
+                      content: message['content'],
+                      sId: message['_id'],
+                      from: FromUser(
+                        tag: message['from']['tag'],
+                        sId: message['from']['_id'],
+                        username: message['from']['username'],
+                        avatar: message['from']['avatar'],
+                      ),
+                      createTime: message['createTime'],
+                    ),
+                  ]);
+        }
+        Message lastMessage = _message[sId][_message[sId].length - 1];
+        // print(lastMessage);
+        _linkmans[index] = LinkmanItem(
+          sId: _linkmans[index].sId,
+          type: _linkmans[index].type,
+          unread: 0,
+          name: _linkmans[index].name,
+          avatar: _linkmans[index].avatar,
+          creator: _linkmans[index].creator,
+          createTime: DateTime.parse(lastMessage.createTime),
+          message: lastMessage,
+        );
+        _linkmansSort();
+      }
+      notifyListeners();
     });
   }
 
@@ -233,7 +275,7 @@ class Auth with ChangeNotifier {
               Message(
                 type: message['type'],
                 content: message['content'],
-                sId: message['sId'],
+                sId: message['_id'],
                 from: FromUser(
                   tag: message['from']['tag'],
                   sId: message['from']['_id'],
@@ -299,6 +341,50 @@ class Auth with ChangeNotifier {
     }
   }
 
+  // 发送消息
+  Future<void> sendMessage({
+    String to,
+    String type,
+    String content,
+  }) async {
+    try {
+      final res = await Fetch.fetch(
+        'sendMessage',
+        {
+          'to': to,
+          'type': type,
+          'content': content,
+        },
+      );
+      if (res[0] != null) {
+        throw SocketException(res[0]);
+      }
+      final resData = res[1];
+      if (_message.containsKey(to)) {
+        final message = Message(
+          type: resData['type'],
+          content: resData['content'],
+          sId: resData['sId'],
+          from: FromUser(
+            tag: resData['from']['tag'],
+            sId: resData['from']['_id'],
+            username: resData['from']['username'],
+            avatar: resData['from']['avatar'],
+          ),
+          createTime: resData['createTime'],
+        );
+        _message.update(to, (messages) {
+          return [...messages, message];
+        });
+        print(_message[to].length);
+      }
+      notifyListeners();
+      // print(_message);
+    } catch (e) {
+      throw e;
+    }
+  }
+
   List<Message> getMessageItem(String sId) =>
       _message.containsKey(sId) ? _message[sId] : [];
 
@@ -323,7 +409,7 @@ class Auth with ChangeNotifier {
   // 组装好友
   Future<void> setFriends(resData) async {
     (resData['friends'] as List<dynamic>).forEach((friend) {
-      String usId = getFriendId(friend['from'], friend['to']['_id']);
+      String usId = Util.getFriendId(friend['from'], friend['to']['_id']);
       Message lastMessage = _message[usId][_message[usId].length - 1];
       _linkmans.add(
         LinkmanItem(

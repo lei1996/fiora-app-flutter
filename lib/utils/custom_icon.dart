@@ -20,9 +20,9 @@ class CustomIcon {
 
   static const _kFontFam = 'CustomIcon';
 
-  static const IconData emoticon_happy = const IconData(0xe800, fontFamily: _kFontFam);
-  static const IconData attach = const IconData(0xe801, fontFamily: _kFontFam);
+  static const IconData attach = const IconData(0xe800, fontFamily: _kFontFam);
+  static const IconData bi = const IconData(0xe801, fontFamily: _kFontFam);
   static const IconData xia = const IconData(0xe802, fontFamily: _kFontFam);
-  static const IconData bi = const IconData(0xe803, fontFamily: _kFontFam);
+  static const IconData emoticon_happy = const IconData(0xe803, fontFamily: _kFontFam);
   static const IconData send = const IconData(0xe916, fontFamily: _kFontFam);
 }
