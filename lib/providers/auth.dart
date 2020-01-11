@@ -108,17 +108,11 @@ class Auth with ChangeNotifier {
       setFriends(resData);
       setGroups(resData);
       _linkmansSort();
+      _listenMessage();
     } catch (e) {
       throw e;
     }
   }
-
-  // String getFriendId(String userId1, String userId2) {
-  //   if (userId1.compareTo(userId2) == -1) {
-  //     return userId1 + userId2;
-  //   }
-  //   return userId2 + userId1;
-  // }
 
   // 注册
   Future<void> signup(String userName, String password) async {
@@ -151,7 +145,6 @@ class Auth with ChangeNotifier {
     if (res[0] != null) {
       throw SocketException(res[0]);
     }
-    _listenMessage();
     final resData = res[1];
     final linkmanIds = [
       ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
@@ -162,6 +155,7 @@ class Auth with ChangeNotifier {
     setFriends(resData);
     setGroups(resData);
     _linkmansSort();
+    _listenMessage();
     setValue(
       token: extractedUserData['token'],
       userId: extractedUserData['userId'],
@@ -184,65 +178,27 @@ class Auth with ChangeNotifier {
         _tag = message['from']['tag'];
         notifyListeners();
       }
-      var index = _linkmans
-          .indexWhere((linkman) => linkman.sId.startsWith(message['to']));
+      final index = findLinkmanIndex(message['to']);
       if (index >= 0) {
         // 这里查找Map 里面有没有具体的key
-        String sId;
-        if (_message.containsKey(message['to'])) {
-          sId = message['to'];
-          _message.update(
-              sId,
-              (messages) => [
-                    ...messages,
-                    Message(
-                      type: message['type'],
-                      content: message['content'],
-                      sId: message['_id'],
-                      from: FromUser(
-                        tag: message['from']['tag'],
-                        sId: message['from']['_id'],
-                        username: message['from']['username'],
-                        avatar: message['from']['avatar'],
-                      ),
-                      createTime: message['createTime'],
-                    ),
-                  ]);
-        } else {
-          sId = Util.getFriendId(_userId, message['from']['_id']);
-          _message.update(
-              sId,
-              (messages) => [
-                    ...messages,
-                    Message(
-                      type: message['type'],
-                      content: message['content'],
-                      sId: message['_id'],
-                      from: FromUser(
-                        tag: message['from']['tag'],
-                        sId: message['from']['_id'],
-                        username: message['from']['username'],
-                        avatar: message['from']['avatar'],
-                      ),
-                      createTime: message['createTime'],
-                    ),
-                  ]);
-        }
-        Message lastMessage = _message[sId][_message[sId].length - 1];
-        // print(lastMessage);
-        _linkmans[index] = LinkmanItem(
-          sId: _linkmans[index].sId,
-          type: _linkmans[index].type,
-          unread: 0,
-          name: _linkmans[index].name,
-          avatar: _linkmans[index].avatar,
-          creator: _linkmans[index].creator,
-          createTime: DateTime.parse(lastMessage.createTime),
-          message: lastMessage,
+        String sId = _message.containsKey(message['to'])
+            ? message['to']
+            : Util.getFriendId(_userId, message['from']['_id']);
+        final Message unitMessage = Message(
+          type: message['type'],
+          content: message['content'],
+          sId: message['_id'],
+          from: FromUser(
+            tag: message['from']['tag'],
+            sId: message['from']['_id'],
+            username: message['from']['username'],
+            avatar: message['from']['avatar'],
+          ),
+          createTime: message['createTime'],
         );
-        _linkmansSort();
+        setMessage(sId, unitMessage);
+        updateLinkmans(sId, index);
       }
-      notifyListeners();
     });
   }
 
@@ -360,11 +316,12 @@ class Auth with ChangeNotifier {
         throw SocketException(res[0]);
       }
       final resData = res[1];
+      print(resData);
       if (_message.containsKey(to)) {
         final message = Message(
           type: resData['type'],
           content: resData['content'],
-          sId: resData['sId'],
+          sId: resData['_id'],
           from: FromUser(
             tag: resData['from']['tag'],
             sId: resData['from']['_id'],
@@ -373,16 +330,47 @@ class Auth with ChangeNotifier {
           ),
           createTime: resData['createTime'],
         );
-        _message.update(to, (messages) {
-          return [...messages, message];
-        });
-        print(_message[to].length);
+        setMessage(to, message);
+        final index = findLinkmanIndex(to);
+        updateLinkmans(to, index);
       }
-      notifyListeners();
-      // print(_message);
     } catch (e) {
       throw e;
     }
+  }
+
+  // 组装消息，将消息插入到_message Map 和 linkmans里面
+  void setMessage(String linkmanId, Message message) {
+    _message.update(linkmanId, (messages) {
+      return [...messages, message];
+    });
+    notifyListeners();
+  }
+
+  // 获取联系人的最后一条消息
+  Message getLastMessage(String id) {
+    return _message[id][_message[id].length - 1];
+  }
+
+  // 查找linkman的 index 下标
+  int findLinkmanIndex(String id) {
+    return _linkmans.indexWhere((linkman) => linkman.sId.startsWith(id));
+  }
+
+  // 更新联系人列表
+  void updateLinkmans(String id, int i) {
+    Message lastMessage = getLastMessage(id);
+    _linkmans[i] = LinkmanItem(
+      sId: _linkmans[i].sId,
+      type: _linkmans[i].type,
+      unread: 0,
+      name: _linkmans[i].name,
+      avatar: _linkmans[i].avatar,
+      creator: _linkmans[i].creator,
+      createTime: DateTime.parse(lastMessage.createTime),
+      message: lastMessage,
+    );
+    _linkmansSort();
   }
 
   List<Message> getMessageItem(String sId) =>
@@ -449,6 +437,7 @@ class Auth with ChangeNotifier {
   Future<void> _linkmansSort() async {
     _linkmans.sort(
         (LinkmanItem a, LinkmanItem b) => b.createTime.compareTo(a.createTime));
+    notifyListeners();
   }
 
   // 登出
