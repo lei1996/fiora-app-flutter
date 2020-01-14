@@ -6,6 +6,7 @@ import 'package:fiora_app_flutter/models/friends.dart';
 import 'package:fiora_app_flutter/models/linkman.dart';
 import 'package:fiora_app_flutter/models/message.dart';
 import 'package:fiora_app_flutter/utils/util.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -70,11 +71,11 @@ class Auth with ChangeNotifier {
         urlSegment,
         {'username': userName, 'password': password},
       );
-      // print(res);
       if (res[0] != null) {
         throw SocketException(res[0]);
       }
       final resData = res[1];
+      print(resData);
       setValue(
         token: resData['token'],
         userId: resData['_id'],
@@ -146,16 +147,19 @@ class Auth with ChangeNotifier {
       throw SocketException(res[0]);
     }
     final resData = res[1];
+    // print(resData);
     final linkmanIds = [
       ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
       ...(resData['friends'] as List<dynamic>).map(
           (friend) => Util.getFriendId(friend['from'], friend['to']['_id'])),
     ];
     await getLinkmansLastMessages(linkmanIds);
-    setFriends(resData);
-    setGroups(resData);
-    _linkmansSort();
-    _listenMessage();
+    Timer(Duration(milliseconds: 3000), () {
+      setFriends(resData);
+      setGroups(resData);
+      _linkmansSort();
+      _listenMessage();
+    });
     setValue(
       token: extractedUserData['token'],
       userId: extractedUserData['userId'],
@@ -208,7 +212,6 @@ class Auth with ChangeNotifier {
 
   // 获取联系人最后消息
   Future<void> getLinkmansLastMessages(List<dynamic> linkmanIds) async {
-    // print(linkmanIds);
     try {
       final res = await Fetch.fetch(
         'getLinkmansLastMessages',
@@ -221,31 +224,12 @@ class Auth with ChangeNotifier {
         throw SocketException(res[0]);
       }
       final resData = res[1];
-      // print(resData);
       // 消息 要使用Map<String, List<Message>> 的数据结构
-      (resData as Map<String, dynamic>).forEach((linkmanId, massageData) {
-        List<Message> messageItem = [];
-        _message.putIfAbsent(linkmanId, () {
-          (massageData as List<dynamic>).forEach((message) {
-            messageItem.add(
-              Message(
-                type: message['type'],
-                content: message['content'],
-                sId: message['_id'],
-                from: FromUser(
-                  tag: message['from']['tag'],
-                  sId: message['from']['_id'],
-                  username: message['from']['username'],
-                  avatar: message['from']['avatar'],
-                ),
-                createTime: message['createTime'],
-              ),
-            );
-          });
-          return messageItem;
-        });
+      (resData as Map<String, dynamic>).forEach((linkmanId, massageData) async {
+        List<Message> messageItem =
+            await compute(Message.parseMessage, massageData);
+        _message.putIfAbsent(linkmanId, () => messageItem);
       });
-      // print(_message);
     } catch (e) {
       throw e;
     }
@@ -263,30 +247,13 @@ class Auth with ChangeNotifier {
           'existCount': existCount,
         },
       );
-      // print(res);
       if (res[0] != null) {
         throw SocketException(res[0]);
       }
       final resData = res[1];
       // print(resData);
       // 消息 要使用Map<String, List<Message>> 的数据结构
-      List<Message> messageItem = [];
-      (resData as List<dynamic>).forEach((message) {
-        messageItem.add(
-          Message(
-            type: message['type'],
-            content: message['content'],
-            sId: message['sId'],
-            from: FromUser(
-              tag: message['from']['tag'],
-              sId: message['from']['_id'],
-              username: message['from']['username'],
-              avatar: message['from']['avatar'],
-            ),
-            createTime: message['createTime'],
-          ),
-        );
-      });
+      List<Message> messageItem = await compute(Message.parseMessage, resData);
       _message.update(linkmanId, (messages) {
         return [...messageItem, ...messages];
       });
@@ -339,7 +306,7 @@ class Auth with ChangeNotifier {
     }
   }
 
-  // 组装消息，将消息插入到_message Map 和 linkmans里面
+  // 组装消息，将消息插入到_message Map里面
   void setMessage(String linkmanId, Message message) {
     _message.update(linkmanId, (messages) {
       return [...messages, message];
@@ -399,10 +366,11 @@ class Auth with ChangeNotifier {
     (resData['friends'] as List<dynamic>).forEach((friend) {
       String usId = Util.getFriendId(friend['from'], friend['to']['_id']);
       Message lastMessage = _message[usId][_message[usId].length - 1];
+      print(lastMessage);
       _linkmans.add(
         LinkmanItem(
           sId: usId,
-          type: '',
+          type: 'friend',
           unread: 0,
           name: friend['to']['username'],
           avatar: friend['to']['avatar'],
@@ -422,7 +390,7 @@ class Auth with ChangeNotifier {
       _linkmans.add(
         LinkmanItem(
           sId: usId,
-          type: '',
+          type: 'group',
           unread: 0,
           name: group['name'],
           avatar: group['avatar'],
