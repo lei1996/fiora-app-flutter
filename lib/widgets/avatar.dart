@@ -45,13 +45,6 @@ class Avatar extends StatelessWidget {
         placeholder: (context, url) => defaultImage(),
         errorWidget: (context, url, error) => defaultImage(),
       ),
-      // child: FadeInImage(
-      //   placeholder: AssetImage(defaultUrl),
-      //   image: NetworkImage(url),
-      //   width: width,
-      //   height: height,
-      //   fit: BoxFit.cover,
-      // ),
     );
   }
 }

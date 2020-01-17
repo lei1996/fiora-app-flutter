@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
 
-import 'package:fiora_app_flutter/models/groups.dart';
-import 'package:fiora_app_flutter/models/friends.dart';
 import 'package:fiora_app_flutter/models/linkman.dart';
 import 'package:fiora_app_flutter/models/message.dart';
 import 'package:fiora_app_flutter/utils/util.dart';
@@ -202,10 +200,10 @@ class Auth with ChangeNotifier {
   static parseLinkman(data) {
     var friend = data['friends'].firstWhere(
         (f) => Util.getFriendId(f['from'], f['to']['_id']) == data['linkmanId'],
-        orElse: () => null);
+        orElse: () => print('No matching element.'));
 
-    var group = data['groups']
-        .firstWhere((g) => g['_id'] == data['linkmanId'], orElse: () => null);
+    var group = data['groups'].firstWhere((g) => g['_id'] == data['linkmanId'],
+        orElse: () => print('No matching element.'));
 
     // 返回一个数组，用于判断是 friend 还是 group
     return friend != null ? [true, friend] : [false, group];
@@ -247,7 +245,7 @@ class Auth with ChangeNotifier {
       final resData = res[1];
       // 消息 要使用Map<String, List<Message>> 的数据结构
       (resData as Map<String, dynamic>).forEach((linkmanId, massageData) async {
-        // 这里是切换了线程进行计算，所以当await之前，foreach 会
+        // 这里是切换了线程进行计算，所以当await之前，foreach 会跳入下一个循环
         List<Message> messageItem =
             await compute(Message.parseMessage, massageData);
 

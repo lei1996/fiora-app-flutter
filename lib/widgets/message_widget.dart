@@ -1,3 +1,4 @@
+import 'package:fiora_app_flutter/widgets/message/image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -25,8 +26,41 @@ class MessageWidget extends StatelessWidget {
     @required this.createTime,
   });
 
+  Widget _buildMessage() {
+    switch (type) {
+      case 'text':
+        return Container(
+          padding: EdgeInsets.symmetric(
+            vertical: ScreenUtil().setHeight(20),
+            horizontal: ScreenUtil().setWidth(30),
+          ),
+          constraints: BoxConstraints(
+            minWidth: ScreenUtil().setWidth(20),
+            maxWidth: ScreenUtil().setWidth(780),
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            color: Color.fromRGBO(80, 85, 90, 1),
+          ),
+          child: Text(
+            content,
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+        );
+        break;
+      case 'image':
+        return ImageWidget(
+            id: id, url: "https:" + content, handleTap: () => print('123'));
+        break;
+      default:
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    print(type);
     return creator == prevCreator
         ? Padding(
             padding: EdgeInsets.only(
@@ -36,26 +70,7 @@ class MessageWidget extends StatelessWidget {
             ),
             child: Row(
               children: <Widget>[
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: ScreenUtil().setHeight(20),
-                    horizontal: ScreenUtil().setWidth(30),
-                  ),
-                  constraints: BoxConstraints(
-                    minWidth: ScreenUtil().setWidth(20),
-                    maxWidth: ScreenUtil().setWidth(780),
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                    color: Color.fromRGBO(80, 85, 90, 1),
-                  ),
-                  child: Text(
-                    content,
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                _buildMessage(),
               ],
             ),
           )
@@ -95,12 +110,7 @@ class MessageWidget extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                           color: Color.fromRGBO(80, 85, 90, 1),
                         ),
-                        child: Text(
-                          content,
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _buildMessage(),
                       ),
                     ],
                   ),
