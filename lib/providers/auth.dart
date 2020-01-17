@@ -35,9 +35,6 @@ class Auth with ChangeNotifier {
 
   List<LinkmanItem> _linkmans = [];
 
-  final List<FriendItem> _friends = [];
-  final List<GroupItem> _groups = [];
-
   bool get isAuth {
     return token != null;
   }
@@ -75,7 +72,7 @@ class Auth with ChangeNotifier {
         throw SocketException(res[0]);
       }
       final resData = res[1];
-      print(resData);
+      // print(resData);
       setValue(
         token: resData['token'],
         userId: resData['_id'],
@@ -93,7 +90,8 @@ class Auth with ChangeNotifier {
         ...(resData['friends'] as List<dynamic>).map(
             (friend) => Util.getFriendId(friend['from'], friend['to']['_id'])),
       ];
-      await getLinkmansLastMessages(linkmanIds);
+      await getLinkmansLastMessages(
+          linkmanIds, resData['friends'], resData['groups']);
       notifyListeners();
       final perfs = await SharedPreferences.getInstance();
       final userData = json.encode({
@@ -106,10 +104,6 @@ class Auth with ChangeNotifier {
         'expiryDate': _expiryDate.toIso8601String(),
       });
       perfs.setString('userData', userData);
-      setFriends(resData);
-      setGroups(resData);
-      _linkmansSort();
-      _listenMessage();
     } catch (e) {
       throw e;
     }
@@ -153,13 +147,8 @@ class Auth with ChangeNotifier {
       ...(resData['friends'] as List<dynamic>).map(
           (friend) => Util.getFriendId(friend['from'], friend['to']['_id'])),
     ];
-    await getLinkmansLastMessages(linkmanIds);
-    Timer(Duration(milliseconds: 3000), () {
-      setFriends(resData);
-      setGroups(resData);
-      _linkmansSort();
-      _listenMessage();
-    });
+    await getLinkmansLastMessages(
+        linkmanIds, resData['friends'], resData['groups']);
     setValue(
       token: extractedUserData['token'],
       userId: extractedUserData['userId'],
@@ -176,7 +165,7 @@ class Auth with ChangeNotifier {
 
   Future<void> _listenMessage() async {
     socket.on('message', (dynamic message) {
-      print(message);
+      // print(message);
       var isMe = message['from']['_id'] == _userId;
       if (isMe && message['from']['tag'] != _tag) {
         _tag = message['from']['tag'];
@@ -210,8 +199,40 @@ class Auth with ChangeNotifier {
     socket.on('_disconnect', (_) => print("_disconnect"));
   }
 
+  static parseLinkman(data) {
+    var friend = data['friends'].firstWhere(
+        (f) => Util.getFriendId(f['from'], f['to']['_id']) == data['linkmanId'],
+        orElse: () => null);
+
+    var group = data['groups']
+        .firstWhere((g) => g['_id'] == data['linkmanId'], orElse: () => null);
+
+    // 返回一个数组，用于判断是 friend 还是 group
+    return friend != null ? [true, friend] : [false, group];
+  }
+
+  void addLinkman(String id, linkman, Message message) {
+    _linkmans.add(
+      LinkmanItem(
+        sId: id,
+        type: linkman[0] ? 'friend' : 'group',
+        unread: 0,
+        name: linkman[0] ? linkman[1]['to']['username'] : linkman[1]['name'],
+        avatar: linkman[0] ? linkman[1]['to']['avatar'] : linkman[1]['avatar'],
+        creator: linkman[0] ? '' : linkman[1]['creator'],
+        createTime: DateTime.parse(message.createTime),
+        message: message,
+      ),
+    );
+    // notifyListeners();
+  }
+
   // 获取联系人最后消息
-  Future<void> getLinkmansLastMessages(List<dynamic> linkmanIds) async {
+  Future<void> getLinkmansLastMessages(
+    List<dynamic> linkmanIds,
+    List<dynamic> friends,
+    List<dynamic> groups,
+  ) async {
     try {
       final res = await Fetch.fetch(
         'getLinkmansLastMessages',
@@ -219,17 +240,25 @@ class Auth with ChangeNotifier {
           'linkmans': linkmanIds,
         },
       );
-      // print(res);
+      // print(res[1]);
       if (res[0] != null) {
         throw SocketException(res[0]);
       }
       final resData = res[1];
       // 消息 要使用Map<String, List<Message>> 的数据结构
       (resData as Map<String, dynamic>).forEach((linkmanId, massageData) async {
+        // 这里是切换了线程进行计算，所以当await之前，foreach 会
         List<Message> messageItem =
             await compute(Message.parseMessage, massageData);
+
+        // 联系人
+        var linkman = await compute(parseLinkman,
+            {'linkmanId': linkmanId, 'friends': friends, 'groups': groups});
+        addLinkman(linkmanId, linkman, messageItem[messageItem.length - 1]);
         _message.putIfAbsent(linkmanId, () => messageItem);
+        _linkmansSort();
       });
+      _listenMessage();
     } catch (e) {
       throw e;
     }
@@ -283,7 +312,7 @@ class Auth with ChangeNotifier {
         throw SocketException(res[0]);
       }
       final resData = res[1];
-      print(resData);
+      // print(resData);
       if (_message.containsKey(to)) {
         final message = Message(
           type: resData['type'],
@@ -366,7 +395,7 @@ class Auth with ChangeNotifier {
     (resData['friends'] as List<dynamic>).forEach((friend) {
       String usId = Util.getFriendId(friend['from'], friend['to']['_id']);
       Message lastMessage = _message[usId][_message[usId].length - 1];
-      print(lastMessage);
+      // print(lastMessage);
       _linkmans.add(
         LinkmanItem(
           sId: usId,
