@@ -34,7 +34,8 @@ class ImageWidget extends StatelessWidget {
       }
       width = natureWidth * scale;
       height = naturehHeight * scale;
-      scaleImgUrl = "${url}&imageView2/3/w/${(width * 1.2).round()}/h/${(height * 1.2).round()}";
+      scaleImgUrl =
+          "${url}&imageView2/3/w/${(width * 1.2).round()}/h/${(height * 1.2).round()}";
     }
   }
 
@@ -49,21 +50,30 @@ class ImageWidget extends StatelessWidget {
           vertical: ScreenUtil().setHeight(8),
           horizontal: ScreenUtil().setWidth(8),
         ),
-        child: CachedNetworkImage(
-          imageUrl: scaleImgUrl,
-          imageBuilder: (context, imageProvider) => Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: imageProvider,
-                fit: BoxFit.cover,
-                colorFilter: null,
+        child: Hero(
+          tag: id,
+          child: CachedNetworkImage(
+            imageUrl: scaleImgUrl,
+            imageBuilder: (context, imageProvider) => Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: imageProvider,
+                  fit: BoxFit.cover,
+                  colorFilter: null,
+                ),
+              ),
+              width: width * 1.2,
+              height: height * 1.2,
+            ),
+            placeholder: (context, url) => Container(
+              width: width * 1.2,
+              height: height * 1.2,
+              decoration: BoxDecoration(
+                color: Colors.grey,
               ),
             ),
-            width: width,
-            height: height,
+            errorWidget: (context, url, error) => Container(),
           ),
-          placeholder: (context, url) => Container(),
-          errorWidget: (context, url, error) => Container(),
         ),
       ),
     );

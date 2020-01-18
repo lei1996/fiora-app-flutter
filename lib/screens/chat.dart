@@ -90,8 +90,9 @@ class _ChatPageState extends State<ChatPage> {
     String id,
     int count,
   }) async {
-    await Provider.of<Auth>(context, listen: false)
-        .getLinkmanHistoryMessages(linkmanId: id, existCount: count);
+    var bloc = Provider.of<Auth>(context, listen: false);
+    await bloc.getLinkmanHistoryMessages(linkmanId: id, existCount: count);
+    bloc.setGalleryItem(id);
     // 拉取历史数据之后 scroll 跳到上一次记录的位置
     // Timer(
     //     Duration(milliseconds: 1000),
@@ -165,8 +166,9 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final params = ModalRoute.of(context).settings.arguments as dynamic;
-    final List<Message> messages = Provider.of<Auth>(context, listen: false)
-        .getMessageItem(params['id'] as String);
+    final bloc = Provider.of<Auth>(context, listen: false);
+    final List<Message> messages = bloc.getMessageItem(params['id'] as String);
+    bloc.setGalleryItem(params['id']);
     return Scaffold(
       appBar: AppBar(
         title: Text(params['name']),

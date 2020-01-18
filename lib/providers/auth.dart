@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:fiora_app_flutter/models/galleryItem.dart';
 import 'package:fiora_app_flutter/models/linkman.dart';
 import 'package:fiora_app_flutter/models/message.dart';
 import 'package:fiora_app_flutter/utils/util.dart';
@@ -32,6 +33,9 @@ class Auth with ChangeNotifier {
   Map<String, List<Message>> _message = {};
 
   List<LinkmanItem> _linkmans = [];
+
+  Map<String, List<GalleryItem>> _galleryItems = {};
+  String focusId;
 
   bool get isAuth {
     return token != null;
@@ -365,6 +369,32 @@ class Auth with ChangeNotifier {
       message: lastMessage,
     );
     _linkmansSort();
+  }
+
+  List<GalleryItem> getGalleryItem() {
+    return _galleryItems[focusId];
+  }
+
+  int getGalleryItemIndex(String id) {
+    return getGalleryItem().indexWhere((gallery) => gallery.id == id);
+  }
+
+  // 获取某个会话消息的 image 数组
+  Future<void> setGalleryItem(String id) async {
+    // 这里将会话id 赋值.
+    focusId = id;
+    final List<Message> messages = getMessageItem(id);
+    final List<GalleryItem> _galleryItemsTmp = [];
+    messages.map((message) {
+      if (message.type == 'image')
+        _galleryItemsTmp.add(
+            GalleryItem(id: message.sId, resource: "https:" + message.content));
+    }).toList();
+    _galleryItems.containsKey(id)
+        ? _galleryItems.update(id, (_) => _galleryItemsTmp)
+        : _galleryItems.putIfAbsent(id, () => _galleryItemsTmp);
+    print(_galleryItems[id]);
+    // return _galleryItems;
   }
 
   List<Message> getMessageItem(String sId) =>
