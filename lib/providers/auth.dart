@@ -393,7 +393,7 @@ class Auth with ChangeNotifier {
     _galleryItems.containsKey(id)
         ? _galleryItems.update(id, (_) => _galleryItemsTmp)
         : _galleryItems.putIfAbsent(id, () => _galleryItemsTmp);
-    print(_galleryItems[id]);
+    // print(_galleryItems[id]);
     // return _galleryItems;
   }
 

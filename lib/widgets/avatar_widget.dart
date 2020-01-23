@@ -12,14 +12,13 @@ class AvatarWidget extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       builder: (_) {
         return Container(
-          height: ScreenUtil().setHeight(760),
-          child: Center(
-            child: Provider.of<Auth>(ctx, listen: false).isAuth
-                ? UserWidget()
-                : AuthWidget(),
-          ),
+          // height: ScreenUtil().setHeight(760),
+          child: Provider.of<Auth>(ctx, listen: false).isAuth
+              ? UserWidget()
+              : AuthWidget(),
         );
       },
     );

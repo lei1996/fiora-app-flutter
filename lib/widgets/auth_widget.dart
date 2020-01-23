@@ -69,6 +69,7 @@ class _AuthAuthWidgetState extends State<AuthWidget>
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -76,18 +77,15 @@ class _AuthAuthWidgetState extends State<AuthWidget>
           padding: EdgeInsets.only(
             left: ScreenUtil().setWidth(100),
             right: ScreenUtil().setWidth(100),
+            top: ScreenUtil().setHeight(100),
+            bottom: mediaQuery.viewInsets.bottom + ScreenUtil().setHeight(100),
           ),
           child: Column(
             children: <Widget>[
               TextFormField(
                 decoration: InputDecoration(labelText: '用户名'),
                 keyboardType: TextInputType.text,
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return '无效的用户名!';
-                  }
-                  return null;
-                },
+                validator: (value) => value.isEmpty ? '无效的用户名!' : null,
                 onSaved: (value) {
                   _authData['username'] = value;
                 },
@@ -96,12 +94,7 @@ class _AuthAuthWidgetState extends State<AuthWidget>
                 decoration: InputDecoration(labelText: '密码'),
                 obscureText: true,
                 controller: _passwordController,
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return '密码不能为空!';
-                  }
-                  return null;
-                },
+                validator: (value) => value.isEmpty ? '密码不能为空!' : null,
                 onSaved: (value) {
                   _authData['password'] = value;
                 },

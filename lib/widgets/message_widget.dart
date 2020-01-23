@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import './avatar.dart';
 import '../utils/time.dart';
 import 'gallery_photo_viewWrapper.dart';
+import 'message/text_widget.dart';
 
 class MessageWidget extends StatelessWidget {
   final String id;
@@ -47,12 +48,18 @@ class MessageWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(6),
             color: Color.fromRGBO(80, 85, 90, 1),
           ),
-          child: Text(
-            content,
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
+          child: 
+          // Column(
+          //   children: <Widget>[
+          //     Text(
+          //       content,
+          //       style: TextStyle(
+          //         color: Colors.white,
+          //       ),
+          //     ),
+              TextWidget(text: content,),
+          //   ],
+          // ),
         );
         break;
       case 'image':
