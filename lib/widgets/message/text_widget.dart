@@ -68,45 +68,82 @@ class TextWidget extends StatelessWidget {
     String textStack;
     int linkIndex;
     int expressionIndex;
+    int maxIndex;
     int minIndex;
 
     textStack = text;
 
+    // for (var i = 0; i < 5; i++) {
     while (textStack != '') {
       linkIndex = textStack.indexOf(linkPattern);
       expressionIndex = textStack.indexOf(expressionPattern);
+      maxIndex = [linkIndex, expressionIndex].reduce(max);
       minIndex = [linkIndex, expressionIndex].reduce(min);
 
-      if (expressionIndex > 0 && linkIndex > 0) {
-        inlineList.add(TextSpan(text: textStack.substring(0, minIndex)));
-        textStack = textStack.substring(minIndex, textStack.length);
-        linkIndex = textStack.indexOf(linkPattern);
-        expressionIndex = textStack.indexOf(expressionPattern);
-      }
-      if (expressionIndex > linkIndex) {
-        var result;
-        if (linkIndex != -1) {
-          result = _linkWidget(textStack);
-          inlineList.add(result[1]);
+      var result;
+
+      // 这里设计有缺陷，应该求 数组中 “大于0的最小值” 。
+      if (minIndex > 0 ||
+          (expressionIndex > 0 && minIndex == -1) ||
+          (linkIndex > 0 && minIndex == -1)) {
+        if (minIndex != -1) {
+          inlineList.add(TextSpan(text: textStack.substring(0, minIndex)));
+          textStack = textStack.substring(minIndex, textStack.length);
+          continue;
         } else {
-          result = _expressionWidget(textStack);
-          inlineList.add(result[1]);
+          inlineList.add(TextSpan(text: textStack.substring(0, maxIndex)));
+          textStack = textStack.substring(maxIndex, textStack.length);
+          continue;
         }
-        textStack = textStack.substring(result[0], textStack.length);
-      } else if (linkIndex > expressionIndex) {
-        var result;
-        if (expressionIndex != -1) {
-          result = _expressionWidget(textStack);
-          inlineList.add(result[1]);
-        } else {
-          result = _linkWidget(textStack);
-          inlineList.add(result[1]);
-        }
-        textStack = textStack.substring(result[0], textStack.length);
-      } else {
-        inlineList.add(TextSpan(text: textStack));
-        textStack = '';
       }
+
+      if (expressionIndex == 0 || (expressionIndex > 0 && minIndex == -1)) {
+        result = _expressionWidget(textStack);
+        inlineList.add(result[1]);
+        textStack = textStack.substring(result[0], textStack.length);
+        continue;
+      }
+      if (linkIndex == 0 || (linkIndex > 0 && minIndex == -1)) {
+        result = _linkWidget(textStack);
+        inlineList.add(result[1]);
+        textStack = textStack.substring(result[0], textStack.length);
+        continue;
+      }
+
+      inlineList.add(TextSpan(text: textStack));
+      textStack = '';
+      continue;
+
+      // if (expressionIndex > 0 && linkIndex > 0) {
+      //   inlineList.add(TextSpan(text: textStack.substring(0, minIndex)));
+      //   textStack = textStack.substring(minIndex, textStack.length);
+      //   linkIndex = textStack.indexOf(linkPattern);
+      //   expressionIndex = textStack.indexOf(expressionPattern);
+      // }
+      // if (expressionIndex > linkIndex) {
+      //   var result;
+      //   if (linkIndex != -1) {
+      //     result = _linkWidget(textStack);
+      //     inlineList.add(result[1]);
+      //   } else {
+      //     result = _expressionWidget(textStack);
+      //     inlineList.add(result[1]);
+      //   }
+      //   textStack = textStack.substring(result[0], textStack.length);
+      // } else if (linkIndex > expressionIndex) {
+      //   var result;
+      //   if (expressionIndex != -1) {
+      //     result = _expressionWidget(textStack);
+      //     inlineList.add(result[1]);
+      //   } else {
+      //     result = _linkWidget(textStack);
+      //     inlineList.add(result[1]);
+      //   }
+      //   textStack = textStack.substring(result[0], textStack.length);
+      // } else {
+      //   inlineList.add(TextSpan(text: textStack));
+      //   textStack = '';
+      // }
     }
 
     return inlineList;
