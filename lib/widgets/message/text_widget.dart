@@ -46,18 +46,7 @@ class TextWidget extends StatelessWidget {
     if (index != -1) {
       return [
         cont.length,
-        WidgetSpan(
-          child: Image.asset(
-            'assets/images/baidu.png',
-            width: 30,
-            height: 30,
-            fit: BoxFit.cover,
-            // 正确的值  index 为15的时候 思路：计算图标大小 和 偏移量
-            // alignment: Alignment(0, -0.3885), (-0.38850999999999997动态计算的值，虽然有一点点的误差，但是问题不大)
-            alignment: Alignment(0, -(1 - 0.042666 * index) - (0.0019 * index)),
-            matchTextDirection: true,
-          ),
-        ),
+        WidgetSpan(child: Util.exressionModel(index)),
       ];
     }
     return [cont.length, TextSpan(text: cont)];
@@ -154,6 +143,7 @@ class TextWidget extends StatelessWidget {
     // _renderWidget();
     return Container(
       child: RichText(
+        // textAlign: TextAlign.left,
         text: TextSpan(
           style: TextStyle(
             color: Colors.white,

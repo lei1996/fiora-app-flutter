@@ -14,6 +14,9 @@ class ImageWidget extends StatelessWidget {
     @required this.id,
     @required this.url,
     @required this.handleTap,
+    this.width,
+    this.height,
+    this.scaleImgUrl,
   });
 
   setWidget() {
@@ -35,7 +38,7 @@ class ImageWidget extends StatelessWidget {
       width = natureWidth * scale;
       height = naturehHeight * scale;
       scaleImgUrl =
-          "${url}&imageView2/3/w/${(width * 1.2).round()}/h/${(height * 1.2).round()}";
+          "$url&imageView2/3/w/${(width * 1.2).round()}/h/${(height * 1.2).round()}";
     }
   }
 

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Util {
   static String getFriendId(String userId1, String userId2) {
     if (userId1.compareTo(userId2) == -1) {
@@ -5,6 +7,17 @@ class Util {
     }
     return userId2 + userId1;
   }
+
+  static Image exressionModel(int index) => Image.asset(
+        'assets/images/baidu.png',
+        width: 30,
+        height: 30,
+        fit: BoxFit.cover,
+        // 正确的值  index 为15的时候 思路：计算图标大小 和 偏移量
+        // alignment: Alignment(0, -0.3885), (-0.38850999999999997动态计算的值，虽然有一点点的误差，但是问题不大)
+        alignment: Alignment(0, -(1 - 0.042666 * index) - (0.0019 * index)),
+        matchTextDirection: true,
+      );
 
   static List<String> expression = [
     '呵呵',
