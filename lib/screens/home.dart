@@ -20,6 +20,7 @@ class HomePage extends StatelessWidget {
       height: 2436,
       allowFontScaling: true,
     )..init(context);
+    final bloc = Provider.of<Auth>(context, listen: false);
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -36,7 +37,7 @@ class HomePage extends StatelessWidget {
                 children: <Widget>[
                   IconButton(
                     icon: Icon(Icons.menu),
-                    onPressed: () {},
+                    onPressed: () => bloc.logout(),
                   ),
                   AvatarWidget(),
                 ],

@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
 
-import 'package:fiora_app_flutter/utils/custom_icon.dart';
-import 'package:fiora_app_flutter/widgets/expressions_widget.dart';
+import 'package:fiora_app_flutter/widgets/message_composer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -21,15 +18,12 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   ScrollController _scrollController;
-  final _messageController = TextEditingController();
-  final _messageFocusNode = FocusNode();
-  // @(\S)+\s+
+  // @(?!@)(\S+)
   // double _prevOffset;
 
   @override
   void initState() {
     _scrollController = ScrollController();
-    // _scrollController.addListener(_scrollListener);
     Future.delayed(Duration.zero).then((_) {
       _scrollController.jumpTo(
         _scrollController.position.maxScrollExtent,
@@ -43,10 +37,9 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     // Clean up the controller when the widget is removed from the
     // widget tree.
-    _messageController.dispose();
-    _messageFocusNode.dispose();
     super.dispose();
   }
+
 
   // _scrollListener() {
   //   print(_scrollController.offset);
@@ -70,23 +63,6 @@ class _ChatPageState extends State<ChatPage> {
   //   }
   // }
 
-  // 发送消息
-  Future<void> _sendMessage({
-    String to,
-    String type,
-    String content,
-  }) async {
-    await Provider.of<Auth>(context, listen: false)
-        .sendMessage(to: to, type: type, content: content);
-    Timer(
-        Duration(milliseconds: 300),
-        () => _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: Duration(milliseconds: 300),
-              curve: Curves.easeIn,
-            ));
-  }
-
   // 加载历史消息
   Future<void> _loadingMessages({
     BuildContext context,
@@ -103,78 +79,6 @@ class _ChatPageState extends State<ChatPage> {
     //         .jumpTo(_scrollController.position.maxScrollExtent - _prevOffset));
     // print(_scrollController.position.maxScrollExtent - _prevOffset);
     // _prevOffset = _scrollController.position.maxScrollExtent;
-  }
-
-  Widget _buildMessageComposer(String id) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(18.0),
-          topRight: Radius.circular(18.0),
-        ),
-        color: Colors.grey[300],
-      ),
-      padding: EdgeInsets.symmetric(horizontal: ScreenUtil().setWidth(80.0)),
-      // 220
-      height: ScreenUtil().setHeight(620 + (Platform.isIOS ? 40 : 0)),
-      child: Column(
-        children: [
-          Row(
-            children: <Widget>[
-              IconButton(
-                icon: Icon(CustomIcon.emoticon_happy),
-                iconSize: ScreenUtil().setWidth(90.0),
-                color: Theme.of(context).accentColor,
-                onPressed: () {},
-              ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ScreenUtil().setWidth(50.0),
-                  ),
-                  child: TextField(
-                    controller: _messageController,
-                    textCapitalization: TextCapitalization.sentences,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) {
-                      if (_messageController.text.isEmpty) return;
-                      _sendMessage(
-                        to: id,
-                        type: 'text',
-                        content: _messageController.text,
-                      );
-                      _messageController.text = '';
-                    },
-                    focusNode: _messageFocusNode,
-                    // collapsed 去除input 下面的线
-                    decoration: InputDecoration.collapsed(
-                      hintText: '代码写完了吗?',
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                  // attach_file
-                  icon: Icon(CustomIcon.send),
-                  iconSize: ScreenUtil().setWidth(90.0),
-                  color: Theme.of(context).accentColor,
-                  onPressed: () {
-                    if (_messageController.text.isEmpty) return;
-                    _sendMessage(
-                      to: id,
-                      type: 'text',
-                      content: _messageController.text,
-                    );
-                    _messageController.text = '';
-                  }),
-            ],
-          ),
-          Container(
-            child: ExpressionsWidget(),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -244,7 +148,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
               ),
-              _buildMessageComposer(params['id']),
+              MessageComposerWidget(),
             ],
           ),
         ),

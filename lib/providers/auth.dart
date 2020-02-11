@@ -45,7 +45,7 @@ class Auth with ChangeNotifier {
 
   dynamic get avatar => _avatar;
 
-  List<LinkmanItem> get linkmans => [..._linkmans];
+  List<LinkmanItem> get linkmans => _linkmans;
 
   String get token {
     if (_expiryDate != null &&
