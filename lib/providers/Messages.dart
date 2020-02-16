@@ -1,8 +1,6 @@
-import 'package:flutter/foundation.dart';
-
 import '../models/message.dart';
 
-class Messages with ChangeNotifier {
+class Messages {
   Map<String, List<Message>> _messages = {};
 
   /// 获取 _messages
@@ -11,7 +9,7 @@ class Messages with ChangeNotifier {
   /// 获取id消息列表
   List<Message> getMessageItem(String id) =>
       _messages.containsKey(id) ? _messages[id] : [];
-  
+
   /// 查找消息 消息内容
   List<Message> findMessageItem(String content) {
     // 暂未实现
@@ -25,24 +23,24 @@ class Messages with ChangeNotifier {
     } else {
       _messages.putIfAbsent(linkmanId, () => messageItem);
     }
-    notifyListeners();
+    // notifyListeners();
   }
 
   /// 发送消息/接受到的单个消息
   void updateItem(String linkmanId, Message message) {
     if (_messages.containsKey(linkmanId)) {
-      _messages.update(linkmanId, (messages) => [...messages, message]);
+      _messages.update(linkmanId, (messages) => messages..add(message));
     } else {
       // 当消息列表中不存在该联系人时，添加
       _messages.putIfAbsent(linkmanId, () => [message]);
     }
-    notifyListeners();
+    // notifyListeners();
   }
 
   /// 移除某个联系人消息
   void removeItem(String linkmanId) {
     _messages.remove(linkmanId);
-    notifyListeners();
+    // notifyListeners();
   }
 
   /// 删除掉某个联系人的单条消息
@@ -53,12 +51,12 @@ class Messages with ChangeNotifier {
         linkmanId,
         (messages) =>
             messages..removeWhere((message) => message.sId == messageId));
-    notifyListeners();
+    // notifyListeners();
   }
 
   // 清空所有聊天记录 _messages
   void clear() {
     _messages = {};
-    notifyListeners();
+    // notifyListeners();
   }
 }

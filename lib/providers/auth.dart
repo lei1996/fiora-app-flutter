@@ -14,6 +14,9 @@ import '../models/socket_exception.dart';
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+import 'Linkmans.dart';
+import 'Messages.dart';
+
 final url = ['http://127.0.0.1:9200', 'https://fiora.suisuijiang.com'];
 
 IO.Socket socket = IO.io(url[1], <String, dynamic>{
@@ -30,9 +33,9 @@ class Auth with ChangeNotifier {
   String _tag; // 标签
   bool _isAdmin; // 判断是否为管理员
 
-  Map<String, List<Message>> _message = {};
+  Messages _message = Messages();
 
-  List<LinkmanItem> _linkmans = [];
+  Linkmans _linkmans = Linkmans();
 
   Map<String, List<GalleryItem>> _galleryItems = {};
   String focusId;
@@ -41,11 +44,9 @@ class Auth with ChangeNotifier {
     return token != null;
   }
 
-  int get messageCount => _message.length;
-
   dynamic get avatar => _avatar;
 
-  List<LinkmanItem> get linkmans => _linkmans;
+  get linkmans => _linkmans.linkmans;
 
   String get token {
     if (_expiryDate != null &&
@@ -60,6 +61,7 @@ class Auth with ChangeNotifier {
     return _userId;
   }
 
+  // 公共
   Future<void> _authenticate(
     String urlSegment,
     String userName,
@@ -111,16 +113,6 @@ class Auth with ChangeNotifier {
     }
   }
 
-  // 注册
-  Future<void> signup(String userName, String password) async {
-    return _authenticate('register', userName, password);
-  }
-
-  // 登录
-  Future<void> login(String userName, String password) async {
-    return _authenticate('login', userName, password);
-  }
-
   // 自动登录
   Future<bool> tryAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
@@ -165,6 +157,16 @@ class Auth with ChangeNotifier {
     return true;
   }
 
+  // 注册
+  Future<void> signup(String userName, String password) async {
+    return _authenticate('register', userName, password);
+  }
+
+  // 登录
+  Future<void> login(String userName, String password) async {
+    return _authenticate('login', userName, password);
+  }
+
   Future<void> _listenMessage() async {
     socket.on('message', (dynamic message) {
       // print(message);
@@ -173,10 +175,10 @@ class Auth with ChangeNotifier {
         _tag = message['from']['tag'];
         notifyListeners();
       }
-      final index = findLinkmanIndex(message['to']);
+      final index = _linkmans.findLinkmanIndex(message['to']);
       if (index >= 0) {
         // 这里查找Map 里面有没有具体的key
-        String sId = _message.containsKey(message['to'])
+        String sId = _message.messages.containsKey(message['to'])
             ? message['to']
             : Util.getFriendId(_userId, message['from']['_id']);
         final Message unitMessage = Message(
@@ -192,7 +194,9 @@ class Auth with ChangeNotifier {
           createTime: message['createTime'],
         );
         setMessage(sId, unitMessage);
-        updateLinkmans(sId, index);
+        _linkmans.addItem(_linkmans.linkmans[index], getLastMessage(sId));
+        _linkmans.linkmanSort();
+        notifyListeners();
       }
     });
   }
@@ -213,21 +217,9 @@ class Auth with ChangeNotifier {
     return friend != null ? [true, friend] : [false, group];
   }
 
-  void addLinkman(String id, linkman, Message message) {
-    _linkmans.add(
-      LinkmanItem(
-        sId: id,
-        type: linkman[0] ? 'friend' : 'group',
-        unread: 0,
-        name: linkman[0] ? linkman[1]['to']['username'] : linkman[1]['name'],
-        avatar: linkman[0] ? linkman[1]['to']['avatar'] : linkman[1]['avatar'],
-        creator: linkman[0] ? '' : linkman[1]['creator'],
-        createTime: DateTime.parse(message.createTime),
-        message: message,
-      ),
-    );
-    // notifyListeners();
-  }
+  // void addLinkman(String id, linkman, Message message) {
+  //   _linkmans.addItem(linkman, message);
+  // }
 
   // 获取联系人最后消息
   Future<void> getLinkmansLastMessages(
@@ -250,15 +242,30 @@ class Auth with ChangeNotifier {
       // 消息 要使用Map<String, List<Message>> 的数据结构
       (resData as Map<String, dynamic>).forEach((linkmanId, massageData) async {
         // 这里是切换了线程进行计算，所以当await之前，foreach 会跳入下一个循环
-        List<Message> messageItem =
+        List<Message> messages =
             await compute(Message.parseMessage, massageData);
 
         // 联系人
         var linkman = await compute(parseLinkman,
             {'linkmanId': linkmanId, 'friends': friends, 'groups': groups});
-        addLinkman(linkmanId, linkman, messageItem[messageItem.length - 1]);
-        _message.putIfAbsent(linkmanId, () => messageItem);
-        _linkmansSort();
+        // addLinkman(linkmanId, linkman, messageItem[messageItem.length - 1]);
+        print(linkman);
+        final Message lastMessage = messages[messages.length - 1];
+        final linkmanItem = LinkmanItem(
+          sId: linkmanId,
+          type: linkman[0] ? 'friend' : 'group',
+          unread: 0,
+          name: linkman[0] ? linkman[1]['to']['username'] : linkman[1]['name'],
+          avatar:
+              linkman[0] ? linkman[1]['to']['avatar'] : linkman[1]['avatar'],
+          creator: linkman[0] ? '' : linkman[1]['creator'],
+          createTime: DateTime.parse(lastMessage.createTime),
+          message: lastMessage,
+        );
+        _linkmans.addItem(linkmanItem);
+        _message.addItem(linkmanId, messages);
+        _linkmans.linkmanSort();
+        notifyListeners();
       });
       _listenMessage();
     } catch (e) {
@@ -285,9 +292,7 @@ class Auth with ChangeNotifier {
       // print(resData);
       // 消息 要使用Map<String, List<Message>> 的数据结构
       List<Message> messageItem = await compute(Message.parseMessage, resData);
-      _message.update(linkmanId, (messages) {
-        return [...messageItem, ...messages];
-      });
+      _message.addItem(linkmanId, messageItem);
       notifyListeners();
       // print(_message);
     } catch (e) {
@@ -315,7 +320,7 @@ class Auth with ChangeNotifier {
       }
       final resData = res[1];
       // print(resData);
-      if (_message.containsKey(to)) {
+      if (_message.messages.containsKey(to)) {
         final message = Message(
           type: resData['type'],
           content: resData['content'],
@@ -329,8 +334,9 @@ class Auth with ChangeNotifier {
           createTime: resData['createTime'],
         );
         setMessage(to, message);
-        final index = findLinkmanIndex(to);
-        updateLinkmans(to, index);
+        final index = _linkmans.findLinkmanIndex(to);
+        _linkmans.addItem(_linkmans.linkmans[index], getLastMessage(to));
+        _linkmans.linkmanSort();
       }
     } catch (e) {
       throw e;
@@ -339,37 +345,19 @@ class Auth with ChangeNotifier {
 
   // 组装消息，将消息插入到_message Map里面
   void setMessage(String linkmanId, Message message) {
-    _message.update(linkmanId, (messages) {
-      return [...messages, message];
-    });
+    _message.updateItem(linkmanId, message);
     notifyListeners();
   }
 
   // 获取联系人的最后一条消息
   Message getLastMessage(String id) {
-    return _message[id][_message[id].length - 1];
+    return _message.messages[id][_message.messages[id].length - 1];
   }
 
-  // 查找linkman的 index 下标
-  int findLinkmanIndex(String id) {
-    return _linkmans.indexWhere((linkman) => linkman.sId.startsWith(id));
-  }
-
-  // 更新联系人列表
-  void updateLinkmans(String id, int i) {
-    Message lastMessage = getLastMessage(id);
-    _linkmans[i] = LinkmanItem(
-      sId: _linkmans[i].sId,
-      type: _linkmans[i].type,
-      unread: 0,
-      name: _linkmans[i].name,
-      avatar: _linkmans[i].avatar,
-      creator: _linkmans[i].creator,
-      createTime: DateTime.parse(lastMessage.createTime),
-      message: lastMessage,
-    );
-    _linkmansSort();
-  }
+  // // 查找linkman的 index 下标
+  // int findLinkmanIndex(String id) {
+  //   return _linkmans.indexWhere((linkman) => linkman.sId.startsWith(id));
+  // }
 
   List<GalleryItem> getGalleryItem() {
     return _galleryItems[focusId];
@@ -398,7 +386,7 @@ class Auth with ChangeNotifier {
   }
 
   List<Message> getMessageItem(String sId) =>
-      _message.containsKey(sId) ? _message[sId] : [];
+      _message.messages.containsKey(sId) ? _message.messages[sId] : [];
 
   void setValue({
     token,
@@ -420,49 +408,48 @@ class Auth with ChangeNotifier {
 
   // 组装好友
   Future<void> setFriends(resData) async {
-    (resData['friends'] as List<dynamic>).forEach((friend) {
-      String usId = Util.getFriendId(friend['from'], friend['to']['_id']);
-      Message lastMessage = _message[usId][_message[usId].length - 1];
-      // print(lastMessage);
-      _linkmans.add(
-        LinkmanItem(
-          sId: usId,
-          type: 'friend',
-          unread: 0,
-          name: friend['to']['username'],
-          avatar: friend['to']['avatar'],
-          creator: '',
-          createTime: DateTime.parse(friend['createTime']),
-          message: lastMessage,
-        ),
-      );
-    });
+    (resData['friends'] as List<dynamic>).forEach(
+      (friend) {
+        String usId = Util.getFriendId(friend['from'], friend['to']['_id']);
+        Message lastMessage =
+            _message.messages[usId][_message.messages[usId].length - 1];
+        _linkmans.addItem(
+          LinkmanItem(
+            sId: usId,
+            type: 'friend',
+            unread: 0,
+            name: friend['to']['username'],
+            avatar: friend['to']['avatar'],
+            creator: '',
+            createTime: DateTime.parse(friend['createTime']),
+            message: lastMessage,
+          ),
+        );
+      },
+    );
   }
 
   // 组装群组
   Future<void> setGroups(resData) async {
-    (resData['groups'] as List<dynamic>).forEach((group) {
-      String usId = group['_id'];
-      Message lastMessage = _message[usId][_message[usId].length - 1];
-      _linkmans.add(
-        LinkmanItem(
-          sId: usId,
-          type: 'group',
-          unread: 0,
-          name: group['name'],
-          avatar: group['avatar'],
-          creator: group['creator'],
-          createTime: DateTime.parse(lastMessage.createTime),
-          message: lastMessage,
-        ),
-      );
-    });
-  }
-
-  Future<void> _linkmansSort() async {
-    _linkmans.sort(
-        (LinkmanItem a, LinkmanItem b) => b.createTime.compareTo(a.createTime));
-    notifyListeners();
+    (resData['groups'] as List<dynamic>).forEach(
+      (group) {
+        String usId = group['_id'];
+        Message lastMessage =
+            _message.messages[usId][_message.messages[usId].length - 1];
+        _linkmans.addItem(
+          LinkmanItem(
+            sId: usId,
+            type: 'group',
+            unread: 0,
+            name: group['name'],
+            avatar: group['avatar'],
+            creator: group['creator'],
+            createTime: DateTime.parse(lastMessage.createTime),
+            message: lastMessage,
+          ),
+        );
+      },
+    );
   }
 
   // 登出
