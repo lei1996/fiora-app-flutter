@@ -1,3 +1,4 @@
+import 'package:fiora_app_flutter/screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -56,7 +57,8 @@ class _AuthAuthWidgetState extends State<AuthWidget>
     try {
       await Provider.of<Auth>(context, listen: false)
           .login(_authData['username'], _authData['password']);
-      Navigator.of(context).pop();
+      // Navigator.of(context).pop();
+      Navigator.of(context).pushReplacementNamed(HomePage.routeName);
     } on SocketException catch (e) {
       Navigator.of(context).pop();
       _showErrorDialog(e.toString());

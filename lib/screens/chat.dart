@@ -40,7 +40,6 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-
   // _scrollListener() {
   //   print(_scrollController.offset);
   //   if (_scrollController.offset >=
@@ -123,7 +122,9 @@ class _ChatPageState extends State<ChatPage> {
                         controller: _scrollController,
                         // 逐项滚动 聊天message 并不需要
                         // physics: PageScrollPhysics(),
-                        itemCount: authData.getMessageItem(params['id']).length,
+                        itemCount: authData
+                            .getMessageItem(params['id'])
+                            .length,
                         itemBuilder: (ctx, i) {
                           final Message message =
                               authData.getMessageItem(params['id'])[i];
@@ -148,7 +149,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
               ),
-              MessageComposerWidget(),
+              MessageComposerWidget(params['id']),
             ],
           ),
         ),

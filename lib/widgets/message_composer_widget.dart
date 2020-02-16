@@ -9,9 +9,9 @@ import 'package:provider/provider.dart';
 import 'expressions_widget.dart';
 
 class MessageComposerWidget extends StatefulWidget {
-  // final String id;
+  final String id;
 
-  // MessageComposerWidget(this.id);
+  MessageComposerWidget(this.id);
   // 表情扩展栏开关
   @override
   _MessageComposerWidgetState createState() => _MessageComposerWidgetState();
@@ -79,11 +79,11 @@ class _MessageComposerWidgetState extends State<MessageComposerWidget> {
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) {
                       if (_messageController.text.isEmpty) return;
-                      // _sendMessage(
-                      //   to: widget.id,
-                      //   type: 'text',
-                      //   content: _messageController.text,
-                      // );
+                      _sendMessage(
+                        to: widget.id,
+                        type: 'text',
+                        content: _messageController.text,
+                      );
                       _messageController.text = '';
                     },
                     focusNode: _messageFocusNode,
@@ -98,20 +98,19 @@ class _MessageComposerWidgetState extends State<MessageComposerWidget> {
                   // attach_file
                   icon: Icon(
                     CustomIcon.send,
-                    color: Colors.white,
+                    // color: Colors.white,
                   ),
                   iconSize: ScreenUtil().setWidth(90.0),
                   color: Theme.of(context).accentColor,
-                  onPressed: _messageController.text.isEmpty
-                      ? null
-                      : () {
-                          // _sendMessage(
-                          //   to: widget.id,
-                          //   type: 'text',
-                          //   content: _messageController.text,
-                          // );
-                          _messageController.text = '';
-                        }),
+                  onPressed: () {
+                    if (_messageController.text.isEmpty) return;
+                    _sendMessage(
+                      to: widget.id,
+                      type: 'text',
+                      content: _messageController.text,
+                    );
+                    _messageController.text = '';
+                  }),
             ],
           ),
           isToggleExp

@@ -59,10 +59,7 @@ class BlockLevelButton extends StatelessWidget {
       onPressed: handleTap,
       shape: RoundedRectangleBorder(borderRadius: radius),
       padding: const EdgeInsets.all(0.0),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-        child: commonBtn(),
-      ),
+      child: commonBtn(),
     );
   }
 

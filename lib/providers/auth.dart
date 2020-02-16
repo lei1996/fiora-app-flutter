@@ -76,18 +76,12 @@ class Auth with ChangeNotifier {
         throw SocketException(res[0]);
       }
       final resData = res[1];
-      // print(resData);
+      // print();
       setValue(
-        token: resData['token'],
-        userId: resData['_id'],
-        isAdmin: resData['isAdmin'],
-        tag: resData['tag'],
-        username: resData['username'],
-        avatar: resData['avatar'],
-        expiryDate: DateTime.now().add(Duration(
-          days: 7,
-        )),
-      );
+          resData: resData,
+          expiryDate: DateTime.now().add(Duration(
+            days: 7,
+          )));
       _autoLogout();
       final linkmanIds = [
         ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
@@ -143,13 +137,9 @@ class Auth with ChangeNotifier {
     ];
     await getLinkmansLastMessages(
         linkmanIds, resData['friends'], resData['groups']);
+    print(extractedUserData);
     setValue(
-      token: extractedUserData['token'],
-      userId: extractedUserData['userId'],
-      isAdmin: extractedUserData['isAdmin'],
-      tag: extractedUserData['tag'],
-      username: extractedUserData['username'],
-      avatar: extractedUserData['avatar'],
+      resData: extractedUserData,
       expiryDate: expiryDate,
     );
     notifyListeners();
@@ -169,7 +159,6 @@ class Auth with ChangeNotifier {
 
   Future<void> _listenMessage() async {
     socket.on('message', (dynamic message) {
-      // print(message);
       var isMe = message['from']['_id'] == _userId;
       if (isMe && message['from']['tag'] != _tag) {
         _tag = message['from']['tag'];
@@ -199,10 +188,6 @@ class Auth with ChangeNotifier {
         notifyListeners();
       }
     });
-  }
-
-  Future<void> _disconnect() async {
-    socket.on('_disconnect', (_) => print("_disconnect"));
   }
 
   static parseLinkman(data) {
@@ -354,11 +339,6 @@ class Auth with ChangeNotifier {
     return _message.messages[id][_message.messages[id].length - 1];
   }
 
-  // // 查找linkman的 index 下标
-  // int findLinkmanIndex(String id) {
-  //   return _linkmans.indexWhere((linkman) => linkman.sId.startsWith(id));
-  // }
-
   List<GalleryItem> getGalleryItem() {
     return _galleryItems[focusId];
   }
@@ -381,28 +361,20 @@ class Auth with ChangeNotifier {
     _galleryItems.containsKey(id)
         ? _galleryItems.update(id, (_) => _galleryItemsTmp)
         : _galleryItems.putIfAbsent(id, () => _galleryItemsTmp);
-    // print(_galleryItems[id]);
-    // return _galleryItems;
   }
 
-  List<Message> getMessageItem(String sId) =>
-      _message.messages.containsKey(sId) ? _message.messages[sId] : [];
+  List<Message> getMessageItem(id) => _message.getMessageItem(id);
 
   void setValue({
-    token,
-    userId,
-    isAdmin,
-    tag,
-    username,
-    avatar,
-    expiryDate,
+    dynamic resData,
+    DateTime expiryDate,
   }) {
-    _token = token;
-    _userId = userId;
-    _isAdmin = isAdmin;
-    _tag = tag;
-    _username = username;
-    _avatar = avatar;
+    _token = resData['token'];
+    _userId = resData['_id'] ?? resData['userId'];
+    _isAdmin = resData['isAdmin'];
+    _tag = resData['tag'];
+    _username = resData['username'];
+    _avatar = resData['avatar'];
     _expiryDate = expiryDate;
   }
 
@@ -467,6 +439,10 @@ class Auth with ChangeNotifier {
     prefs.remove('userData');
     _disconnect();
     // prefs.clear();
+  }
+
+  Future<void> _disconnect() async {
+    socket.on('_disconnect', (_) => print("_disconnect"));
   }
 
   // 自动登出
