@@ -1,18 +1,17 @@
 import 'dart:convert';
 import 'dart:async';
 
-import 'package:fiora_app_flutter/models/galleryItem.dart';
-import 'package:fiora_app_flutter/models/linkman.dart';
-import 'package:fiora_app_flutter/models/message.dart';
-import 'package:fiora_app_flutter/utils/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../utils/fetch.dart' as Fetch;
 import '../models/socket_exception.dart';
-
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../models/galleryItem.dart';
+import '../models/linkman.dart';
+import '../models/message.dart';
+import '../utils/util.dart';
 
 import 'Linkmans.dart';
 import 'Messages.dart';
@@ -34,17 +33,14 @@ class Auth with ChangeNotifier {
   bool _isAdmin; // 判断是否为管理员
 
   Messages _message = Messages();
-
   Linkmans _linkmans = Linkmans();
 
   Map<String, List<GalleryItem>> _galleryItems = {};
   String focusId;
 
-  bool get isAuth {
-    return token != null;
-  }
+  bool get isAuth => token != null;
 
-  dynamic get avatar => _avatar;
+  String get avatar => _avatar;
 
   get linkmans => _linkmans.linkmans;
 
@@ -57,8 +53,17 @@ class Auth with ChangeNotifier {
     return null;
   }
 
-  String get userId {
-    return _userId;
+  // 公共 fetch
+  Future<dynamic> fetchCommon(String urlSegment, dynamic data) async {
+    try {
+      final res = await Fetch.fetch(urlSegment, data);
+      if (res[0] != null) {
+        throw SocketException(res[0]);
+      }
+      return res[1];
+    } catch (e) {
+      throw e;
+    }
   }
 
   // 公共
@@ -68,20 +73,15 @@ class Auth with ChangeNotifier {
     String password,
   ) async {
     try {
-      final res = await Fetch.fetch(
-        urlSegment,
-        {'username': userName, 'password': password},
-      );
-      if (res[0] != null) {
-        throw SocketException(res[0]);
-      }
-      final resData = res[1];
-      // print();
+      final resData = await fetchCommon(
+          urlSegment, {'username': userName, 'password': password});
+
       setValue(
           resData: resData,
           expiryDate: DateTime.now().add(Duration(
             days: 7,
           )));
+          
       _autoLogout();
       final linkmanIds = [
         ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
@@ -110,26 +110,20 @@ class Auth with ChangeNotifier {
   // 自动登录
   Future<bool> tryAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey('userData')) {
-      return false;
-    }
+    // 如果本地持久化存储找不到 userData，则返回 false
+    if (!prefs.containsKey('userData')) return false;
+
     final extractedUserData =
         json.decode(prefs.getString('userData')) as Map<String, Object>;
     final expiryDate = DateTime.parse(extractedUserData['expiryDate']);
 
-    if (expiryDate.isBefore(DateTime.now())) {
-      return false;
-    }
-    // 自动登录 - 保留
-    final res = await Fetch.fetch(
-      'loginByToken',
-      {'token': extractedUserData['token'], 'os': '宇宙最强ios版本'},
-    );
-    if (res[0] != null) {
-      throw SocketException(res[0]);
-    }
-    final resData = res[1];
-    // print(resData);
+    // 如果token过期时间戳超时, 则返回false
+    if (expiryDate.isBefore(DateTime.now())) return false;
+
+    // 自动登录
+    final resData = await fetchCommon('loginByToken',
+        {'token': extractedUserData['token'], 'os': '宇宙最强ios版本'});
+
     final linkmanIds = [
       ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
       ...(resData['friends'] as List<dynamic>).map(
@@ -149,7 +143,8 @@ class Auth with ChangeNotifier {
 
   // 注册
   Future<void> signup(String userName, String password) async {
-    return _authenticate('register', userName, password);
+    final resData = await fetchCommon(
+        'register', {'username': userName, 'password': password});
   }
 
   // 登录
@@ -202,87 +197,56 @@ class Auth with ChangeNotifier {
     return friend != null ? [true, friend] : [false, group];
   }
 
-  // void addLinkman(String id, linkman, Message message) {
-  //   _linkmans.addItem(linkman, message);
-  // }
-
   // 获取联系人最后消息
   Future<void> getLinkmansLastMessages(
     List<dynamic> linkmanIds,
     List<dynamic> friends,
     List<dynamic> groups,
   ) async {
-    try {
-      final res = await Fetch.fetch(
-        'getLinkmansLastMessages',
-        {
-          'linkmans': linkmanIds,
-        },
-      );
-      // print(res[1]);
-      if (res[0] != null) {
-        throw SocketException(res[0]);
-      }
-      final resData = res[1];
-      // 消息 要使用Map<String, List<Message>> 的数据结构
-      (resData as Map<String, dynamic>).forEach((linkmanId, massageData) async {
-        // 这里是切换了线程进行计算，所以当await之前，foreach 会跳入下一个循环
-        List<Message> messages =
-            await compute(Message.parseMessage, massageData);
+    final resData =
+        await fetchCommon('getLinkmansLastMessages', {'linkmans': linkmanIds});
 
-        // 联系人
-        var linkman = await compute(parseLinkman,
-            {'linkmanId': linkmanId, 'friends': friends, 'groups': groups});
-        // addLinkman(linkmanId, linkman, messageItem[messageItem.length - 1]);
-        print(linkman);
-        final Message lastMessage = messages[messages.length - 1];
-        final linkmanItem = LinkmanItem(
-          sId: linkmanId,
-          type: linkman[0] ? 'friend' : 'group',
-          unread: 0,
-          name: linkman[0] ? linkman[1]['to']['username'] : linkman[1]['name'],
-          avatar:
-              linkman[0] ? linkman[1]['to']['avatar'] : linkman[1]['avatar'],
-          creator: linkman[0] ? '' : linkman[1]['creator'],
-          createTime: DateTime.parse(lastMessage.createTime),
-          message: lastMessage,
-        );
-        _linkmans.addItem(linkmanItem);
-        _message.addItem(linkmanId, messages);
-        _linkmans.linkmanSort();
-        notifyListeners();
-      });
-      _listenMessage();
-    } catch (e) {
-      throw e;
-    }
+    // 消息 要使用Map<String, List<Message>> 的数据结构
+    (resData as Map<String, dynamic>).forEach((linkmanId, massageData) async {
+      // 这里是切换了线程进行计算，所以当await之前，foreach 会跳入下一个循环
+      List<Message> messages = await compute(Message.parseMessage, massageData);
+
+      // 联系人
+      var linkman = await compute(parseLinkman,
+          {'linkmanId': linkmanId, 'friends': friends, 'groups': groups});
+      // addLinkman(linkmanId, linkman, messageItem[messageItem.length - 1]);
+      print(linkman);
+      final Message lastMessage = messages[messages.length - 1];
+      final linkmanItem = LinkmanItem(
+        sId: linkmanId,
+        type: linkman[0] ? 'friend' : 'group',
+        unread: 0,
+        name: linkman[0] ? linkman[1]['to']['username'] : linkman[1]['name'],
+        avatar: linkman[0] ? linkman[1]['to']['avatar'] : linkman[1]['avatar'],
+        creator: linkman[0] ? '' : linkman[1]['creator'],
+        createTime: DateTime.parse(lastMessage.createTime),
+        message: lastMessage,
+      );
+      _linkmans.addItem(linkmanItem);
+      _message.addItem(linkmanId, messages);
+      _linkmans.linkmanSort();
+      notifyListeners();
+    });
+    _listenMessage();
   }
 
   // 获取联系人历史消息
   Future<void> getLinkmanHistoryMessages(
       {String linkmanId, int existCount}) async {
-    // print(linkmanIds);
-    try {
-      final res = await Fetch.fetch(
-        'getLinkmanHistoryMessages',
-        {
-          'linkmanId': linkmanId,
-          'existCount': existCount,
-        },
-      );
-      if (res[0] != null) {
-        throw SocketException(res[0]);
-      }
-      final resData = res[1];
-      // print(resData);
-      // 消息 要使用Map<String, List<Message>> 的数据结构
-      List<Message> messageItem = await compute(Message.parseMessage, resData);
-      _message.addItem(linkmanId, messageItem);
-      notifyListeners();
-      // print(_message);
-    } catch (e) {
-      throw e;
-    }
+    final resData = await fetchCommon('getLinkmanHistoryMessages', {
+      'linkmanId': linkmanId,
+      'existCount': existCount,
+    });
+
+    // 消息 要使用Map<String, List<Message>> 的数据结构
+    List<Message> messageItem = await compute(Message.parseMessage, resData);
+    _message.addItem(linkmanId, messageItem);
+    notifyListeners();
   }
 
   // 发送消息
@@ -291,40 +255,29 @@ class Auth with ChangeNotifier {
     String type,
     String content,
   }) async {
-    try {
-      final res = await Fetch.fetch(
-        'sendMessage',
-        {
-          'to': to,
-          'type': type,
-          'content': content,
-        },
+    final resData = await fetchCommon('sendMessage', {
+      'to': to,
+      'type': type,
+      'content': content,
+    });
+
+    if (_message.messages.containsKey(to)) {
+      final message = Message(
+        type: resData['type'],
+        content: resData['content'],
+        sId: resData['_id'],
+        from: FromUser(
+          tag: resData['from']['tag'],
+          sId: resData['from']['_id'],
+          username: resData['from']['username'],
+          avatar: resData['from']['avatar'],
+        ),
+        createTime: resData['createTime'],
       );
-      if (res[0] != null) {
-        throw SocketException(res[0]);
-      }
-      final resData = res[1];
-      // print(resData);
-      if (_message.messages.containsKey(to)) {
-        final message = Message(
-          type: resData['type'],
-          content: resData['content'],
-          sId: resData['_id'],
-          from: FromUser(
-            tag: resData['from']['tag'],
-            sId: resData['from']['_id'],
-            username: resData['from']['username'],
-            avatar: resData['from']['avatar'],
-          ),
-          createTime: resData['createTime'],
-        );
-        setMessage(to, message);
-        final index = _linkmans.findLinkmanIndex(to);
-        _linkmans.addItem(_linkmans.linkmans[index], getLastMessage(to));
-        _linkmans.linkmanSort();
-      }
-    } catch (e) {
-      throw e;
+      setMessage(to, message);
+      final index = _linkmans.findLinkmanIndex(to);
+      _linkmans.addItem(_linkmans.linkmans[index], getLastMessage(to));
+      _linkmans.linkmanSort();
     }
   }
 
