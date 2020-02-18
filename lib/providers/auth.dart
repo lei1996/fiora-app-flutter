@@ -13,8 +13,8 @@ import '../models/linkman.dart';
 import '../models/message.dart';
 import '../utils/util.dart';
 
-import 'Linkmans.dart';
-import 'Messages.dart';
+import 'linkmans.dart';
+import 'messages.dart';
 
 final url = ['http://127.0.0.1:9200', 'https://fiora.suisuijiang.com'];
 
@@ -81,7 +81,7 @@ class Auth with ChangeNotifier {
           expiryDate: DateTime.now().add(Duration(
             days: 7,
           )));
-          
+
       _autoLogout();
       final linkmanIds = [
         ...(resData['groups'] as List<dynamic>).map((group) => group['_id']),
@@ -131,7 +131,8 @@ class Auth with ChangeNotifier {
     ];
     await getLinkmansLastMessages(
         linkmanIds, resData['friends'], resData['groups']);
-    print(extractedUserData);
+    print(resData);
+    // print(extractedUserData);
     setValue(
       resData: extractedUserData,
       expiryDate: expiryDate,
@@ -177,8 +178,8 @@ class Auth with ChangeNotifier {
           ),
           createTime: message['createTime'],
         );
-        setMessage(sId, unitMessage);
-        _linkmans.addItem(_linkmans.linkmans[index], getLastMessage(sId));
+        _message.updateItem(sId, unitMessage);
+        _linkmans.addItem(_linkmans.linkmans[index], _message.getLastMessage(sId));
         _linkmans.linkmanSort();
         notifyListeners();
       }
@@ -274,22 +275,12 @@ class Auth with ChangeNotifier {
         ),
         createTime: resData['createTime'],
       );
-      setMessage(to, message);
+      _message.updateItem(to, message);
       final index = _linkmans.findLinkmanIndex(to);
-      _linkmans.addItem(_linkmans.linkmans[index], getLastMessage(to));
+      _linkmans.addItem(_linkmans.linkmans[index], _message.getLastMessage(to));
       _linkmans.linkmanSort();
+      notifyListeners();
     }
-  }
-
-  // 组装消息，将消息插入到_message Map里面
-  void setMessage(String linkmanId, Message message) {
-    _message.updateItem(linkmanId, message);
-    notifyListeners();
-  }
-
-  // 获取联系人的最后一条消息
-  Message getLastMessage(String id) {
-    return _message.messages[id][_message.messages[id].length - 1];
   }
 
   List<GalleryItem> getGalleryItem() {
@@ -404,7 +395,6 @@ class Auth with ChangeNotifier {
       _authTimer.cancel();
     }
     final timeToExpiry = _expiryDate.difference(DateTime.now()).inSeconds;
-    // print(timeToExpiry);
     _authTimer = Timer(Duration(seconds: timeToExpiry), logout);
   }
 }

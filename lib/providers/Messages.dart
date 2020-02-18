@@ -16,6 +16,11 @@ class Messages {
     return null;
   }
 
+  /// 获取联系人的最后一条消息
+  Message getLastMessage(String id) {
+    return _messages[id][_messages[id].length - 1];
+  }
+
   /// 获取历史消息
   void addItem(String linkmanId, List<Message> messageItem) {
     if (_messages.containsKey(linkmanId)) {
