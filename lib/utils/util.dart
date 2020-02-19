@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Util {
   static String getFriendId(String userId1, String userId2) {
@@ -6,6 +9,12 @@ class Util {
       return userId1 + userId2;
     }
     return userId2 + userId1;
+  }
+
+  static setPerfsData(Map<String, dynamic> data) async {
+    final perfs = await SharedPreferences.getInstance();
+    final userData = json.encode(data);
+    perfs.setString('userData', userData);
   }
 
   static Image exressionModel(int index) => Image.asset(

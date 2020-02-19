@@ -77,10 +77,9 @@ class Auth with ChangeNotifier {
           urlSegment, {'username': userName, 'password': password});
 
       setValue(
-          resData: resData,
-          expiryDate: DateTime.now().add(Duration(
-            days: 7,
-          )));
+        resData: resData,
+        expiryDate: DateTime.now().add(Duration(days: 7)),
+      );
 
       _autoLogout();
       final linkmanIds = [
@@ -91,8 +90,7 @@ class Auth with ChangeNotifier {
       await getLinkmansLastMessages(
           linkmanIds, resData['friends'], resData['groups']);
       notifyListeners();
-      final perfs = await SharedPreferences.getInstance();
-      final userData = json.encode({
+      Util.setPerfsData({
         'token': _token,
         'userId': _userId,
         'isAdmin': _isAdmin,
@@ -101,7 +99,6 @@ class Auth with ChangeNotifier {
         'avatar': "https:" + _avatar,
         'expiryDate': _expiryDate.toIso8601String(),
       });
-      perfs.setString('userData', userData);
     } catch (e) {
       throw e;
     }
@@ -179,7 +176,8 @@ class Auth with ChangeNotifier {
           createTime: message['createTime'],
         );
         _message.updateItem(sId, unitMessage);
-        _linkmans.addItem(_linkmans.linkmans[index], _message.getLastMessage(sId));
+        _linkmans.addItem(
+            _linkmans.linkmans[index], _message.getLastMessage(sId));
         _linkmans.linkmanSort();
         notifyListeners();
       }
@@ -208,7 +206,7 @@ class Auth with ChangeNotifier {
         await fetchCommon('getLinkmansLastMessages', {'linkmans': linkmanIds});
 
     // 消息 要使用Map<String, List<Message>> 的数据结构
-    (resData as Map<String, dynamic>).forEach((linkmanId, massageData) async {
+    resData.forEach((linkmanId, massageData) async {
       // 这里是切换了线程进行计算，所以当await之前，foreach 会跳入下一个循环
       List<Message> messages = await compute(Message.parseMessage, massageData);
 
@@ -320,52 +318,6 @@ class Auth with ChangeNotifier {
     _username = resData['username'];
     _avatar = resData['avatar'];
     _expiryDate = expiryDate;
-  }
-
-  // 组装好友
-  Future<void> setFriends(resData) async {
-    (resData['friends'] as List<dynamic>).forEach(
-      (friend) {
-        String usId = Util.getFriendId(friend['from'], friend['to']['_id']);
-        Message lastMessage =
-            _message.messages[usId][_message.messages[usId].length - 1];
-        _linkmans.addItem(
-          LinkmanItem(
-            sId: usId,
-            type: 'friend',
-            unread: 0,
-            name: friend['to']['username'],
-            avatar: friend['to']['avatar'],
-            creator: '',
-            createTime: DateTime.parse(friend['createTime']),
-            message: lastMessage,
-          ),
-        );
-      },
-    );
-  }
-
-  // 组装群组
-  Future<void> setGroups(resData) async {
-    (resData['groups'] as List<dynamic>).forEach(
-      (group) {
-        String usId = group['_id'];
-        Message lastMessage =
-            _message.messages[usId][_message.messages[usId].length - 1];
-        _linkmans.addItem(
-          LinkmanItem(
-            sId: usId,
-            type: 'group',
-            unread: 0,
-            name: group['name'],
-            avatar: group['avatar'],
-            creator: group['creator'],
-            createTime: DateTime.parse(lastMessage.createTime),
-            message: lastMessage,
-          ),
-        );
-      },
-    );
   }
 
   // 登出

@@ -2,7 +2,6 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/material.dart';
 
 import 'auth_widget.dart';
-import 'buttons/block_level_button.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';

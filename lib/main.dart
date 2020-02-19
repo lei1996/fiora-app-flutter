@@ -1,11 +1,9 @@
 import 'package:fiora_app_flutter/screens/welcome.dart';
-import 'package:fiora_app_flutter/widgets/auth_widget.dart';
 import 'package:fiora_app_flutter/widgets/login.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import './helpers/custom_route.dart';
 import './providers/auth.dart';
 import './screens/home.dart';
 import './screens/chat.dart';
