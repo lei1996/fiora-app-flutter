@@ -20,6 +20,7 @@ final url = ['http://127.0.0.1:9200', 'https://fiora.suisuijiang.com'];
 
 IO.Socket socket = IO.io(url[1], <String, dynamic>{
   'transports': ['websocket'],
+  // 'autoConnect': false,
 });
 
 class Auth with ChangeNotifier {
@@ -42,7 +43,7 @@ class Auth with ChangeNotifier {
 
   String get avatar => _avatar;
 
-  get linkmans => _linkmans.linkmans;
+  List<LinkmanItem> get linkmans => _linkmans.linkmans;
 
   String get token {
     if (_expiryDate != null &&
@@ -208,14 +209,13 @@ class Auth with ChangeNotifier {
     // 消息 要使用Map<String, List<Message>> 的数据结构
     resData.forEach((linkmanId, massageData) async {
       // 这里是切换了线程进行计算，所以当await之前，foreach 会跳入下一个循环
-      List<Message> messages = await compute(Message.parseMessage, massageData);
+      List<Message> messages = Message.parseMessage(massageData);
 
       // 联系人
-      var linkman = await compute(parseLinkman,
+      var linkman = parseLinkman(
           {'linkmanId': linkmanId, 'friends': friends, 'groups': groups});
-      // addLinkman(linkmanId, linkman, messageItem[messageItem.length - 1]);
-      print(linkman);
-      final Message lastMessage = messages[messages.length - 1];
+
+      final Message lastMessage = messages.last;
       final linkmanItem = LinkmanItem(
         sId: linkmanId,
         type: linkman[0] ? 'friend' : 'group',
@@ -338,7 +338,11 @@ class Auth with ChangeNotifier {
   }
 
   Future<void> _disconnect() async {
-    socket.on('_disconnect', (_) => print("_disconnect"));
+    socket.io..disconnect()..connect();
+    _message.clear();
+    _linkmans.clear();
+    notifyListeners();
+    socket.on('disconnect', (_) => print("_disconnect"));
   }
 
   // 自动登出

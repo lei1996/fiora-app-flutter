@@ -32,33 +32,24 @@ class Linkman extends StatelessWidget {
           arguments: {'id': id, 'name': name},
         );
       },
-      child: Hero(
-        tag: id,
-        child: Card(
-          margin: EdgeInsets.symmetric(
-            horizontal: 15,
-            vertical: 4,
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(2),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Avatar(
-                  url: "https:" + avatar,
-                  width: ScreenUtil().setWidth(110),
-                  height: ScreenUtil().setHeight(110),
-                ),
-              ),
-              title: Text(name),
-              subtitle: Text(
-                id.length < 35 ? '$lastName: $message' : message,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              trailing: Text(Time.formatTime(time)),
+      child: Padding(
+        padding: EdgeInsets.all(2),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: Colors.white,
+            child: Avatar(
+              url: "https:" + avatar,
+              width: ScreenUtil().setWidth(110),
+              height: ScreenUtil().setHeight(110),
             ),
           ),
+          title: Text(name),
+          subtitle: Text(
+            id.length < 35 ? '$lastName: $message' : message,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+          trailing: Text(Time.formatTime(time)),
         ),
       ),
     );

@@ -58,9 +58,15 @@ class _AuthAuthWidgetState extends State<AuthWidget>
       await Provider.of<Auth>(context, listen: false)
           .login(_authData['username'], _authData['password']);
       // Navigator.of(context).pop();
+      setState(() {
+        _isLoading = false;
+      });
       Navigator.of(context).pushReplacementNamed(HomePage.routeName);
     } on SocketException catch (e) {
-      Navigator.of(context).pop();
+      // Navigator.of(context).pop();
+      setState(() {
+        _isLoading = false;
+      });
       _showErrorDialog(e.toString());
     } catch (e) {
       print(e);
@@ -104,29 +110,16 @@ class _AuthAuthWidgetState extends State<AuthWidget>
               SizedBox(
                 height: 20,
               ),
-              _isLoading
-                  ? CircularProgressIndicator()
-                  // 后面替换成自定义按钮
-                  // child: Container(
-                  //   padding: EdgeInsets.all(12.0),
-                  //   decoration: BoxDecoration(
-                  //     color: Theme.of(context).buttonColor,
-                  //     borderRadius: BorderRadius.circular(8.0),
-                  //   ),
-                  //   child: Text('My Button'),
-                  // ),
-                  : RaisedButton(
-                      child: Text(_authMode == AuthMode.Login ? '登录' : '注册'),
-                      onPressed: _submit,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
-                      color: Theme.of(context).primaryColor,
-                      textColor:
-                          Theme.of(context).primaryTextTheme.button.color,
-                    ),
+              RaisedButton(
+                child: Text(_authMode == AuthMode.Login ? '登录' : '注册'),
+                onPressed: _submit,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
+                color: Theme.of(context).primaryColor,
+                textColor: Theme.of(context).primaryTextTheme.button.color,
+              ),
               // FlatButton(
               //   child: Text(
               //       '${_authMode == AuthMode.Login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),

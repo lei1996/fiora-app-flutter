@@ -95,10 +95,10 @@ class _ChatPageState extends State<ChatPage> {
       body: GestureDetector(
         // 触碰body 收回输入法
         onTap: () => FocusScope.of(context).unfocus(),
-        child: AnimatedContainer(
+        child: Container(
           // 动画时长
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeIn,
+          // duration: Duration(milliseconds: 300),
+          // curve: Curves.easeIn,
           height: ScreenUtil().setHeight(2164) - mediaQuery.viewInsets.bottom,
           constraints: BoxConstraints(
             minHeight:
@@ -120,6 +120,7 @@ class _ChatPageState extends State<ChatPage> {
                     child: Consumer<Auth>(
                       builder: (ctx, authData, child) => ListView.builder(
                         controller: _scrollController,
+                        cacheExtent: 40,
                         // 逐项滚动 聊天message 并不需要
                         // physics: PageScrollPhysics(),
                         itemCount: authData
