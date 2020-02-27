@@ -43,13 +43,29 @@ class Linkman extends StatelessWidget {
               height: ScreenUtil().setHeight(110),
             ),
           ),
-          title: Text(name),
+          title: Text(
+            name,
+            style: TextStyle(
+              color: Color.fromRGBO(34, 36, 49, 1),
+              fontSize: 16.0,
+            ),
+          ),
           subtitle: Text(
             id.length < 35 ? '$lastName: $message' : message,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
+            style: TextStyle(
+              color: Color.fromRGBO(177, 180, 189, 1),
+              fontSize: 14.0,
+            ),
           ),
-          trailing: Text(Time.formatTime(time)),
+          trailing: Text(
+            Time.formatTime(time),
+            style: TextStyle(
+              color: Color.fromRGBO(177, 180, 189, 1),
+              fontSize: 12.5,
+            ),
+          ),
         ),
       ),
     );
