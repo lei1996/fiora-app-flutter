@@ -35,30 +35,27 @@ class MessageWidget extends StatelessWidget {
     switch (type) {
       case 'text':
         return Container(
-          padding: EdgeInsets.symmetric(
-            vertical: ScreenUtil().setHeight(20),
-            horizontal: ScreenUtil().setWidth(30),
+          padding: EdgeInsets.only(
+            left: ScreenUtil().setWidth(53),
+            right: ScreenUtil().setWidth(104),
+            top: ScreenUtil().setHeight(47),
+            bottom: ScreenUtil().setHeight(47),
           ),
           constraints: BoxConstraints(
             minWidth: ScreenUtil().setWidth(20),
             maxWidth: ScreenUtil().setWidth(780),
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            color: Color.fromRGBO(80, 85, 90, 1),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(22),
+              topRight: Radius.circular(22),
+              bottomRight: Radius.circular(22),
+            ),
+            color: Color.fromRGBO(251, 246, 255, 1),
           ),
-          child: 
-          // Column(
-          //   children: <Widget>[
-          //     Text(
-          //       content,
-          //       style: TextStyle(
-          //         color: Colors.white,
-          //       ),
-          //     ),
-              TextWidget(text: content,),
-          //   ],
-          // ),
+          child: TextWidget(
+            text: content,
+          ),
         );
         break;
       case 'image':
@@ -75,8 +72,7 @@ class MessageWidget extends StatelessWidget {
                       color: Colors.black,
                     ),
                     initialIndex: bloc.getGalleryItemIndex(id),
-                    scrollDirection:
-                        Axis.horizontal,
+                    scrollDirection: Axis.horizontal,
                   ),
                 ),
               );

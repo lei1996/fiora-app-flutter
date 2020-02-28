@@ -48,7 +48,7 @@ class _MessageComposerWidgetState extends State<MessageComposerWidget> {
           topLeft: Radius.circular(18.0),
           topRight: Radius.circular(18.0),
         ),
-        color: Colors.grey[300],
+        color: Color.fromRGBO(251, 250, 252, 1),
       ),
       padding: EdgeInsets.symmetric(horizontal: ScreenUtil().setWidth(80.0)),
       // 220
@@ -62,7 +62,7 @@ class _MessageComposerWidgetState extends State<MessageComposerWidget> {
               IconButton(
                 icon: Icon(CustomIcon.emoticon_happy),
                 iconSize: ScreenUtil().setWidth(90.0),
-                color: Theme.of(context).accentColor,
+                color: Color.fromRGBO(220, 219, 224, 1),
                 onPressed: () {
                   // 打开表情栏
                   setToggleExp(true);
@@ -101,7 +101,7 @@ class _MessageComposerWidgetState extends State<MessageComposerWidget> {
                     // color: Colors.white,
                   ),
                   iconSize: ScreenUtil().setWidth(90.0),
-                  color: Theme.of(context).accentColor,
+                  color: Color.fromRGBO(220, 219, 224, 1),
                   onPressed: () {
                     if (_messageController.text.isEmpty) return;
                     _sendMessage(

@@ -32,7 +32,9 @@ class TextWidget extends StatelessWidget {
         child: GestureDetector(
           child: Text(url,
               style: TextStyle(
-                  decoration: TextDecoration.underline, color: Colors.blue)),
+                  fontSize: 17.0,
+                  decoration: TextDecoration.underline,
+                  color: Colors.blue)),
           onTap: () => _launchURL(url),
         ),
       ),
@@ -49,7 +51,13 @@ class TextWidget extends StatelessWidget {
         WidgetSpan(child: Util.exressionModel(index)),
       ];
     }
-    return [cont.length, TextSpan(text: cont)];
+    return [
+      cont.length,
+      TextSpan(
+          text: cont,
+          style: TextStyle(
+              fontSize: 17.0, color: Color.fromRGBO(163, 163, 173, 1)))
+    ];
   }
 
   _renderWidget() {
@@ -99,40 +107,12 @@ class TextWidget extends StatelessWidget {
         continue;
       }
 
-      inlineList.add(TextSpan(text: textStack));
+      inlineList.add(TextSpan(
+          text: textStack,
+          style: TextStyle(
+              fontSize: 17.0, color: Color.fromRGBO(163, 163, 173, 1))));
       textStack = '';
       continue;
-
-      // if (expressionIndex > 0 && linkIndex > 0) {
-      //   inlineList.add(TextSpan(text: textStack.substring(0, minIndex)));
-      //   textStack = textStack.substring(minIndex, textStack.length);
-      //   linkIndex = textStack.indexOf(linkPattern);
-      //   expressionIndex = textStack.indexOf(expressionPattern);
-      // }
-      // if (expressionIndex > linkIndex) {
-      //   var result;
-      //   if (linkIndex != -1) {
-      //     result = _linkWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   } else {
-      //     result = _expressionWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   }
-      //   textStack = textStack.substring(result[0], textStack.length);
-      // } else if (linkIndex > expressionIndex) {
-      //   var result;
-      //   if (expressionIndex != -1) {
-      //     result = _expressionWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   } else {
-      //     result = _linkWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   }
-      //   textStack = textStack.substring(result[0], textStack.length);
-      // } else {
-      //   inlineList.add(TextSpan(text: textStack));
-      //   textStack = '';
-      // }
     }
 
     return inlineList;
@@ -140,7 +120,6 @@ class TextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // _renderWidget();
     return Container(
       child: RichText(
         // textAlign: TextAlign.left,
