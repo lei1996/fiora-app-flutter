@@ -99,6 +99,13 @@ class _ChatPageState extends State<ChatPage> {
           // 动画时长
           // duration: Duration(milliseconds: 300),
           // curve: Curves.easeIn,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(35),
+              topRight: Radius.circular(35),
+            ),
+            // color: Colors.grey,
+          ),
           height: ScreenUtil().setHeight(2164) - mediaQuery.viewInsets.bottom,
           constraints: BoxConstraints(
             minHeight:
@@ -123,9 +130,7 @@ class _ChatPageState extends State<ChatPage> {
                         cacheExtent: 40,
                         // 逐项滚动 聊天message 并不需要
                         // physics: PageScrollPhysics(),
-                        itemCount: authData
-                            .getMessageItem(params['id'])
-                            .length,
+                        itemCount: authData.getMessageItem(params['id']).length,
                         itemBuilder: (ctx, i) {
                           final Message message =
                               authData.getMessageItem(params['id'])[i];
@@ -140,6 +145,16 @@ class _ChatPageState extends State<ChatPage> {
                                 ? ''
                                 : authData
                                     .getMessageItem(params['id'])[i - 1]
+                                    .from
+                                    .sId,
+                            nextCreator: i ==
+                                    authData
+                                            .getMessageItem(params['id'])
+                                            .length -
+                                        1
+                                ? ''
+                                : authData
+                                    .getMessageItem(params['id'])[i + 1]
                                     .from
                                     .sId,
                             createTime: DateTime.parse(message.createTime),

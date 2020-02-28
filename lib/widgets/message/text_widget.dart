@@ -34,7 +34,7 @@ class TextWidget extends StatelessWidget {
               style: TextStyle(
                   fontSize: 17.0,
                   decoration: TextDecoration.underline,
-                  color: Colors.blue)),
+                  color: Color.fromRGBO(163, 163, 173, 1))),
           onTap: () => _launchURL(url),
         ),
       ),
@@ -125,7 +125,7 @@ class TextWidget extends StatelessWidget {
         // textAlign: TextAlign.left,
         text: TextSpan(
           style: TextStyle(
-            color: Colors.white,
+            color: Color.fromRGBO(163, 163, 173, 1),
             fontSize: ScreenUtil().setSp(40),
           ),
           children: _renderWidget(),

@@ -17,6 +17,7 @@ class MessageWidget extends StatelessWidget {
   final String avatar;
   final String creator;
   final String prevCreator; // 上一条消息的 id
+  final String nextCreator; // 下一条消息的 id
   final DateTime createTime;
 
   MessageWidget({
@@ -27,6 +28,7 @@ class MessageWidget extends StatelessWidget {
     @required this.avatar,
     @required this.creator,
     @required this.prevCreator,
+    @required this.nextCreator,
     @required this.createTime,
   });
 
@@ -86,48 +88,76 @@ class MessageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // print(type);
-    return creator == prevCreator
-        ? Padding(
-            padding: EdgeInsets.only(
-              left: ScreenUtil().setWidth(154),
-              top: ScreenUtil().setHeight(5),
-              bottom: ScreenUtil().setHeight(5),
-            ),
-            child: Row(
-              children: <Widget>[
-                _buildMessage(context),
-              ],
-            ),
-          )
-        : Padding(
-            padding: EdgeInsets.only(
-              top: ScreenUtil().setHeight(22),
-              bottom: ScreenUtil().setHeight(5),
-              left: ScreenUtil().setWidth(22),
-              right: ScreenUtil().setWidth(22),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Avatar(
-                  url: "https:" + avatar,
-                  height: ScreenUtil().setHeight(110),
-                  width: ScreenUtil().setWidth(110),
+    return creator == nextCreator
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              if (creator != prevCreator)
+                Center(
+                    child: Text(
+                  '${Time.formatTime(createTime)}',
+                  style: TextStyle(
+                    color: Color.fromRGBO(220, 219, 222, 1),
+                  ),
+                )),
+              Padding(
+                padding: EdgeInsets.only(
+                  left: ScreenUtil().setWidth(154),
+                  top: ScreenUtil().setHeight(15),
+                  bottom: ScreenUtil().setHeight(5),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: ScreenUtil().setWidth(20),
+                child: Column(
+                  children: <Widget>[
+                    _buildMessage(context),
+                  ],
+                ),
+              ),
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              if (creator != prevCreator)
+                Center(
+                    child: Text(
+                  '${Time.formatTime(createTime)}',
+                  style: TextStyle(
+                    color: Color.fromRGBO(220, 219, 222, 1),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text('$name  ${Time.formatTime(createTime)}'),
-                      _buildMessage(context),
-                    ],
-                  ),
-                )
-              ],
-            ),
+                )),
+              Container(
+                margin: EdgeInsets.only(
+                  bottom: ScreenUtil().setHeight(42),
+                ),
+                padding: EdgeInsets.only(
+                  top: ScreenUtil().setHeight(15),
+                  bottom: ScreenUtil().setHeight(5),
+                  left: ScreenUtil().setWidth(22),
+                  right: ScreenUtil().setWidth(22),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Avatar(
+                      url: "https:" + avatar,
+                      height: ScreenUtil().setHeight(110),
+                      width: ScreenUtil().setWidth(110),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: ScreenUtil().setWidth(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          _buildMessage(context),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              )
+            ],
           );
   }
 }

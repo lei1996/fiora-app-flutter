@@ -53,6 +53,13 @@ class ImageWidget extends StatelessWidget {
           vertical: ScreenUtil().setHeight(8),
           horizontal: ScreenUtil().setWidth(8),
         ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(22),
+            topRight: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+        ),
         child: Hero(
           tag: id,
           child: CachedNetworkImage(
