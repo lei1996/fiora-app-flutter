@@ -29,6 +29,13 @@ class _MessageComposerWidgetState extends State<MessageComposerWidget> {
     });
   }
 
+  @override
+  dispose() {
+    _messageController.dispose();
+    _messageFocusNode.dispose();
+    super.dispose();
+  }
+
   // 发送消息
   Future<void> _sendMessage({
     String to,

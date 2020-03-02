@@ -37,6 +37,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     // Clean up the controller when the widget is removed from the
     // widget tree.
+    _scrollController.dispose();
     super.dispose();
   }
 

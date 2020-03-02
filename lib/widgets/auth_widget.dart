@@ -26,6 +26,12 @@ class _AuthAuthWidgetState extends State<AuthWidget>
   var _isLoading = false;
   final _passwordController = TextEditingController();
 
+  @override
+  dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,

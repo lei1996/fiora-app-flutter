@@ -93,8 +93,8 @@ class _VideoBackground extends State<VideoBackground> {
 
   @override
   dispose() {
-    super.dispose();
     _controller.dispose();
+    super.dispose();
   }
 
   @override
