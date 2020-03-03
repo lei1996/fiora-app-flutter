@@ -48,41 +48,45 @@ class ImageWidget extends StatelessWidget {
     setWidget();
     return GestureDetector(
       onTap: handleTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: ScreenUtil().setHeight(8),
-          horizontal: ScreenUtil().setWidth(8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(22),
+          topRight: Radius.circular(22),
+          bottomRight: Radius.circular(22),
         ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(22),
-            topRight: Radius.circular(22),
-            bottomRight: Radius.circular(22),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(22),
+              topRight: Radius.circular(22),
+              bottomRight: Radius.circular(22),
+            ),
+            color: Color.fromRGBO(251, 246, 255, 1),
           ),
-        ),
-        child: Hero(
-          tag: id,
-          child: CachedNetworkImage(
-            imageUrl: scaleImgUrl,
-            imageBuilder: (context, imageProvider) => Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: imageProvider,
-                  fit: BoxFit.cover,
-                  colorFilter: null,
+          child: Hero(
+            tag: id,
+            child: CachedNetworkImage(
+              imageUrl: scaleImgUrl,
+              imageBuilder: (context, imageProvider) => Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                    colorFilter: null,
+                  ),
+                ),
+                width: width * 1.2,
+                height: height * 1.2,
+              ),
+              placeholder: (context, url) => Container(
+                width: width * 1.2,
+                height: height * 1.2,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
                 ),
               ),
-              width: width * 1.2,
-              height: height * 1.2,
+              errorWidget: (context, url, error) => Container(),
             ),
-            placeholder: (context, url) => Container(
-              width: width * 1.2,
-              height: height * 1.2,
-              decoration: BoxDecoration(
-                color: Colors.grey,
-              ),
-            ),
-            errorWidget: (context, url, error) => Container(),
           ),
         ),
       ),
