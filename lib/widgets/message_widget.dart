@@ -2,7 +2,6 @@ import 'package:fiora_app_flutter/providers/auth.dart';
 import 'package:fiora_app_flutter/widgets/message/image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 
 import './avatar.dart';
@@ -18,6 +17,7 @@ class MessageWidget extends StatelessWidget {
   final String avatar;
   final String creator;
   final String prevCreator; // 上一条消息的 id
+  final String nextCreator; // 下一条消息的 id
   final DateTime createTime;
 
   MessageWidget({
@@ -28,6 +28,7 @@ class MessageWidget extends StatelessWidget {
     @required this.avatar,
     @required this.creator,
     @required this.prevCreator,
+    @required this.nextCreator,
     @required this.createTime,
   });
 
@@ -36,30 +37,27 @@ class MessageWidget extends StatelessWidget {
     switch (type) {
       case 'text':
         return Container(
-          padding: EdgeInsets.symmetric(
-            vertical: ScreenUtil().setHeight(20),
-            horizontal: ScreenUtil().setWidth(30),
+          padding: EdgeInsets.only(
+            left: ScreenUtil().setWidth(53),
+            right: ScreenUtil().setWidth(104),
+            top: ScreenUtil().setHeight(47),
+            bottom: ScreenUtil().setHeight(47),
           ),
           constraints: BoxConstraints(
             minWidth: ScreenUtil().setWidth(20),
             maxWidth: ScreenUtil().setWidth(780),
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            color: Color.fromRGBO(80, 85, 90, 1),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(22),
+              topRight: Radius.circular(22),
+              bottomRight: Radius.circular(22),
+            ),
+            color: Color.fromRGBO(251, 246, 255, 1),
           ),
-          child: 
-          // Column(
-          //   children: <Widget>[
-          //     Text(
-          //       content,
-          //       style: TextStyle(
-          //         color: Colors.white,
-          //       ),
-          //     ),
-              TextWidget(text: content,),
-          //   ],
-          // ),
+          child: TextWidget(
+            text: content,
+          ),
         );
         break;
       case 'image':
@@ -76,8 +74,7 @@ class MessageWidget extends StatelessWidget {
                       color: Colors.black,
                     ),
                     initialIndex: bloc.getGalleryItemIndex(id),
-                    scrollDirection:
-                        Axis.horizontal,
+                    scrollDirection: Axis.horizontal,
                   ),
                 ),
               );
@@ -91,48 +88,76 @@ class MessageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // print(type);
-    return creator == prevCreator
-        ? Padding(
-            padding: EdgeInsets.only(
-              left: ScreenUtil().setWidth(154),
-              top: ScreenUtil().setHeight(5),
-              bottom: ScreenUtil().setHeight(5),
-            ),
-            child: Row(
-              children: <Widget>[
-                _buildMessage(context),
-              ],
-            ),
-          )
-        : Padding(
-            padding: EdgeInsets.only(
-              top: ScreenUtil().setHeight(22),
-              bottom: ScreenUtil().setHeight(5),
-              left: ScreenUtil().setWidth(22),
-              right: ScreenUtil().setWidth(22),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Avatar(
-                  url: "https:" + avatar,
-                  height: ScreenUtil().setHeight(110),
-                  width: ScreenUtil().setWidth(110),
+    return creator == nextCreator
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              if (creator != prevCreator)
+                Center(
+                    child: Text(
+                  '${Time.formatTime(createTime)}',
+                  style: TextStyle(
+                    color: Color.fromRGBO(220, 219, 222, 1),
+                  ),
+                )),
+              Padding(
+                padding: EdgeInsets.only(
+                  left: ScreenUtil().setWidth(154),
+                  top: ScreenUtil().setHeight(15),
+                  bottom: ScreenUtil().setHeight(5),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: ScreenUtil().setWidth(20),
+                child: Column(
+                  children: <Widget>[
+                    _buildMessage(context),
+                  ],
+                ),
+              ),
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              if (creator != prevCreator)
+                Center(
+                    child: Text(
+                  '${Time.formatTime(createTime)}',
+                  style: TextStyle(
+                    color: Color.fromRGBO(220, 219, 222, 1),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text('$name  ${Time.formatTime(createTime)}'),
-                      _buildMessage(context),
-                    ],
-                  ),
-                )
-              ],
-            ),
+                )),
+              Container(
+                margin: EdgeInsets.only(
+                  bottom: ScreenUtil().setHeight(42),
+                ),
+                padding: EdgeInsets.only(
+                  top: ScreenUtil().setHeight(15),
+                  bottom: ScreenUtil().setHeight(5),
+                  left: ScreenUtil().setWidth(22),
+                  right: ScreenUtil().setWidth(22),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Avatar(
+                      url: "https:" + avatar,
+                      height: ScreenUtil().setHeight(110),
+                      width: ScreenUtil().setWidth(110),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: ScreenUtil().setWidth(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          _buildMessage(context),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              )
+            ],
           );
   }
 }

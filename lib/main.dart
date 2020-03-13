@@ -1,8 +1,10 @@
+import 'package:fiora_app_flutter/screens/welcome.dart';
+import 'package:fiora_app_flutter/widgets/login.dart';
 import 'package:flutter/material.dart';
+import 'package:oktoast/oktoast.dart';
 
 import 'package:provider/provider.dart';
 
-import './helpers/custom_route.dart';
 import './providers/auth.dart';
 import './screens/home.dart';
 import './screens/chat.dart';
@@ -16,34 +18,25 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(
-          value: Auth(),
-        ),
+        ChangeNotifierProvider(create: (_) => Auth()),
       ],
       child: Consumer<Auth>(
-        builder: (ctx, auth, _) => MaterialApp(
-          title: 'Flutter Fiora',
-          theme: ThemeData(
-            // This is the theme of your application.
-            //
-            // Try running your application with "flutter run". You'll see the
-            // application has a blue toolbar. Then, without quitting the app, try
-            // changing the primarySwatch below to Colors.green and then invoke
-            // "hot reload" (press "r" in the console where you ran "flutter run",
-            // or simply save your changes to "hot reload" in a Flutter IDE).
-            // Notice that the counter didn't reset back to zero; the application
-            // is not restarted.
-            primarySwatch: Colors.blueGrey,
-            accentColor: Colors.grey,
-            platform: TargetPlatform.iOS,
-            pageTransitionsTheme: PageTransitionsTheme(
-              builders: {
-                TargetPlatform.android: CustomPageTransitionBuilder(),
-                TargetPlatform.iOS: CustomPageTransitionBuilder(),
-              },
+        builder: (ctx, auth, _) => OKToast(
+          child: MaterialApp(
+            title: 'Flutter Fiora',
+            theme: ThemeData(
+              primarySwatch: Colors.blueGrey,
+              scaffoldBackgroundColor: Colors.white,
+              accentColor: Colors.grey,
+              platform: TargetPlatform.iOS,
+              pageTransitionsTheme: PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                },
+              ),
             ),
-          ),
-          home: auth.isAuth
+            home: auth.isAuth
                 ? HomePage()
                 : FutureBuilder(
                     future: auth.tryAutoLogin(),
@@ -51,13 +44,16 @@ class MyApp extends StatelessWidget {
                         authResultSnapshot.connectionState ==
                                 ConnectionState.waiting
                             ? SplashScreen()
-                            : HomePage(),
+                            : Welcome(),
                   ),
-          // initialRoute: '/',
-          routes: {
-            HomePage.routeName: (ctx) => HomePage(),
-            ChatPage.routeName: (ctx) => ChatPage(),
-          },
+            // initialRoute: '/',
+            routes: {
+              HomePage.routeName: (ctx) => HomePage(),
+              ChatPage.routeName: (ctx) => ChatPage(),
+              Welcome.routeName: (ctx) => Welcome(),
+              LoginPage.routeName: (ctx) => LoginPage(),
+            },
+          ),
         ),
       ),
     );

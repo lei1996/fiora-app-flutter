@@ -7,11 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class TextWidget extends StatelessWidget {
   final String text;
-  RegExp linkPattern = new RegExp(
+  final RegExp linkPattern = new RegExp(
       r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)');
-  RegExp expressionPattern = new RegExp(r'#\(([\u4e00-\u9fa5a-z]+)\)');
-  String renderText;
-  List<dynamic> renderWidgets = [];
+  final RegExp expressionPattern = new RegExp(r'#\(([\u4e00-\u9fa5a-z]+)\)');
 
   TextWidget({this.text});
 
@@ -32,7 +30,9 @@ class TextWidget extends StatelessWidget {
         child: GestureDetector(
           child: Text(url,
               style: TextStyle(
-                  decoration: TextDecoration.underline, color: Colors.blue)),
+                  fontSize: 17.0,
+                  decoration: TextDecoration.underline,
+                  color: Color.fromRGBO(163, 163, 173, 1))),
           onTap: () => _launchURL(url),
         ),
       ),
@@ -46,104 +46,71 @@ class TextWidget extends StatelessWidget {
     if (index != -1) {
       return [
         cont.length,
-        WidgetSpan(
-          child: Image.asset(
-            'assets/images/baidu.png',
-            width: 30,
-            height: 30,
-            fit: BoxFit.cover,
-            // 正确的值  index 为15的时候 思路：计算图标大小 和 偏移量
-            // alignment: Alignment(0, -0.3885), (-0.38850999999999997动态计算的值，虽然有一点点的误差，但是问题不大)
-            alignment: Alignment(0, -(1 - 0.042666 * index) - (0.0019 * index)),
-            matchTextDirection: true,
-          ),
-        ),
+        WidgetSpan(child: Util.exressionModel(index)),
       ];
     }
-    return [cont.length, TextSpan(text: cont)];
+    return [
+      cont.length,
+      TextSpan(
+          text: cont,
+          style: TextStyle(
+              fontSize: 17.0, color: Color.fromRGBO(163, 163, 173, 1)))
+    ];
   }
 
   _renderWidget() {
     final List<InlineSpan> inlineList = [];
-    String textStack;
+    String textStack = text;
     int linkIndex;
     int expressionIndex;
-    int maxIndex;
     int minIndex;
-
-    textStack = text;
 
     // for (var i = 0; i < 5; i++) {
     while (textStack != '') {
       linkIndex = textStack.indexOf(linkPattern);
       expressionIndex = textStack.indexOf(expressionPattern);
-      maxIndex = [linkIndex, expressionIndex].reduce(max);
-      minIndex = [linkIndex, expressionIndex].reduce(min);
+      List<int> indexAry = [linkIndex, expressionIndex];
+      // 获取数组里面大于0 的最小值，但是还是会有为 -1 的情况.
+      minIndex = indexAry.reduce((curr, next) =>
+          min(curr, next) < 0 ? max(curr, next) : min(curr, next));
 
       var result;
 
-      // 这里设计有缺陷，应该求 数组中 “大于0的最小值” 。
-      if (minIndex > 0 ||
-          (expressionIndex > 0 && minIndex == -1) ||
-          (linkIndex > 0 && minIndex == -1)) {
-        if (minIndex != -1) {
-          inlineList.add(TextSpan(text: textStack.substring(0, minIndex)));
-          textStack = textStack.substring(minIndex, textStack.length);
+      if (minIndex > 0) {
+        inlineList.add(
+          TextSpan(
+            text: textStack.substring(0, minIndex),
+            style: TextStyle(
+                fontSize: 17.0, color: Color.fromRGBO(163, 163, 173, 1)),
+          ),
+        );
+        textStack = textStack.substring(minIndex, textStack.length);
+        continue;
+      }
+      if (minIndex == 0) {
+        if (expressionIndex == 0) {
+          result = _expressionWidget(textStack);
+          inlineList.add(result[1]);
+          textStack = textStack.substring(result[0], textStack.length);
           continue;
-        } else {
-          inlineList.add(TextSpan(text: textStack.substring(0, maxIndex)));
-          textStack = textStack.substring(maxIndex, textStack.length);
+        }
+        if (linkIndex == 0) {
+          result = _linkWidget(textStack);
+          inlineList.add(result[1]);
+          textStack = textStack.substring(result[0], textStack.length);
           continue;
         }
       }
 
-      if (expressionIndex == 0 || (expressionIndex > 0 && minIndex == -1)) {
-        result = _expressionWidget(textStack);
-        inlineList.add(result[1]);
-        textStack = textStack.substring(result[0], textStack.length);
-        continue;
-      }
-      if (linkIndex == 0 || (linkIndex > 0 && minIndex == -1)) {
-        result = _linkWidget(textStack);
-        inlineList.add(result[1]);
-        textStack = textStack.substring(result[0], textStack.length);
-        continue;
-      }
-
-      inlineList.add(TextSpan(text: textStack));
+      inlineList.add(
+        TextSpan(
+          text: textStack,
+          style: TextStyle(
+              fontSize: 17.0, color: Color.fromRGBO(163, 163, 173, 1)),
+        ),
+      );
       textStack = '';
       continue;
-
-      // if (expressionIndex > 0 && linkIndex > 0) {
-      //   inlineList.add(TextSpan(text: textStack.substring(0, minIndex)));
-      //   textStack = textStack.substring(minIndex, textStack.length);
-      //   linkIndex = textStack.indexOf(linkPattern);
-      //   expressionIndex = textStack.indexOf(expressionPattern);
-      // }
-      // if (expressionIndex > linkIndex) {
-      //   var result;
-      //   if (linkIndex != -1) {
-      //     result = _linkWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   } else {
-      //     result = _expressionWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   }
-      //   textStack = textStack.substring(result[0], textStack.length);
-      // } else if (linkIndex > expressionIndex) {
-      //   var result;
-      //   if (expressionIndex != -1) {
-      //     result = _expressionWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   } else {
-      //     result = _linkWidget(textStack);
-      //     inlineList.add(result[1]);
-      //   }
-      //   textStack = textStack.substring(result[0], textStack.length);
-      // } else {
-      //   inlineList.add(TextSpan(text: textStack));
-      //   textStack = '';
-      // }
     }
 
     return inlineList;
@@ -151,12 +118,12 @@ class TextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // _renderWidget();
     return Container(
       child: RichText(
+        // textAlign: TextAlign.left,
         text: TextSpan(
           style: TextStyle(
-            color: Colors.white,
+            color: Color.fromRGBO(163, 163, 173, 1),
             fontSize: ScreenUtil().setSp(40),
           ),
           children: _renderWidget(),

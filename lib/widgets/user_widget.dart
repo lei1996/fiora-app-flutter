@@ -1,6 +1,4 @@
-import 'package:fiora_app_flutter/providers/auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class UserWidget extends StatelessWidget {
   // 个人设置面板 先判断用户是否登录，登录拿取本地的 Avatar
