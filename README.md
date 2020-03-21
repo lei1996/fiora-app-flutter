@@ -21,9 +21,11 @@
   - 输入框支持@人
   - 集成 网易云音乐 播放器(灵感来源于其他人的开源项目，然后我想，是否可以在聊天的状态下，也能够拥有一个播放器)
 
+## Screenshot
 
-项目的所有功能皆属于实验阶段，会大量重写，以此达到比预期更好的效果，很多功能并不完善，且目前想深挖比较核心的功能，目前这并不是一个完整的项目，60%的代码都处于随时修改的状态。
-比较糟糕的是，目前还没有引入 单元测试。
+<!-- <img src="https://github.com/yinxin630/fiora/raw/master/doc/screenshots/runtime.jpeg" alt="PC" style="max-width:800px" />
+<img src="https://github.com/yinxin630/fiora/raw/master/doc/screenshots/mobile-runtime.png" alt="Mobile" style="max-height:667px" /> -->
+
 
 ### 插件
 ```
