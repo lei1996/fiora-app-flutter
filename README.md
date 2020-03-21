@@ -23,8 +23,8 @@
 
 ## Screenshot
 
-<img src="https://raw.githubusercontent.com/lei1996/fiora-app-flutter/master/doc/screenshots/runtime.png" alt="聊天界面" style="max-width:400px" />
-<img src="https://github.com/lei1996/fiora-app-flutter/blob/master/doc/screenshots/runtime1.png?raw=true" alt="会话列表" style="max-width:400px" />
+<img src="https://raw.githubusercontent.com/lei1996/fiora-app-flutter/master/doc/screenshots/runtime.png" alt="聊天界面" width="40%" />
+<img src="https://github.com/lei1996/fiora-app-flutter/blob/master/doc/screenshots/runtime1.png?raw=true" alt="会话列表" width="40%" />
 
 
 ### 插件
